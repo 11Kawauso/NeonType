@@ -544,7 +544,7 @@ h1 span {
   position: absolute;
   right: 36px;
   bottom: 18%;
-  transform: rotate(-8deg);
+  transform: rotate(8deg);
   text-align: center;
   pointer-events: none;
 }
