@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>案C スタート — eスポーツ HUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;700;800&family=IBM+Plex+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #07090c;
+      --lime: #c8ff3d;
+      --blue: #3db8ff;
+      --line: rgba(200,255,61,.28);
+      --text: #eef3ea;
+      --muted: #8b9684;
+      --panel: rgba(12, 16, 14, .82);
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; margin: 0; }
+    body {
+      font-family: "IBM Plex Sans JP", sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(180deg, #0b0f0c, #07090c 40%, #081018);
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none;
+      background:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(61,184,255,.08) 1px, transparent 1px);
+      background-size: 80px 80px;
+      opacity: .35;
+    }
+    .wrap { position: relative; z-index: 1; max-width: 1160px; margin: 0 auto; padding: 36px 24px 72px; }
+    header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
+    .kicker {
+      font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: .28em; color: var(--blue);
+    }
+    h1 {
+      margin: 8px 0 0; font-family: "Exo 2", sans-serif; font-weight: 800;
+      font-size: clamp(36px, 5vw, 56px); letter-spacing: .04em; line-height: 1;
+    }
+    h1 span { color: var(--lime); text-shadow: 0 0 16px rgba(200,255,61,.4); }
+    .lead { max-width: 640px; color: var(--muted); line-height: 1.85; margin-top: 16px; }
+    .back {
+      font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--lime);
+      text-decoration: none; border: 1px solid var(--lime); padding: 9px 12px;
+    }
+    .back:hover { background: rgba(200,255,61,.12); }
+    .frame {
+      position: relative; background: var(--panel);
+      border: 1px solid var(--line); padding: 18px;
+    }
+    .frame::before, .frame::after {
+      content: ""; position: absolute; width: 12px; height: 12px; border: 2px solid var(--lime);
+    }
+    .frame::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+    .frame::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+    .layout { display: grid; grid-template-columns: 1.15fr .85fr; gap: 18px; margin-top: 34px; }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+    h2 {
+      font-family: "Exo 2", sans-serif; font-size: 13px; letter-spacing: .22em;
+      color: var(--lime); margin: 0 0 14px;
+    }
+    .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 700px) { .modes { grid-template-columns: 1fr; } }
+    .mode {
+      display: block; text-decoration: none; color: inherit;
+      border: 1px solid rgba(61,184,255,.28); padding: 18px 16px; position: relative;
+      background: rgba(8,12,10,.6);
+    }
+    .mode:hover { border-color: var(--lime); box-shadow: 0 0 0 1px var(--lime) inset; }
+    .mode .meta { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--blue); letter-spacing: .16em; }
+    .mode b { display: block; margin: 8px 0 6px; font-family: "Exo 2", sans-serif; font-size: 22px; }
+    .mode p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .mode .t {
+      position: absolute; top: 14px; right: 14px;
+      font-family: "Exo 2", sans-serif; font-weight: 800; color: var(--lime); font-size: 20px;
+    }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .tab {
+      font-family: "JetBrains Mono", monospace; font-size: 11px;
+      background: transparent; border: 1px solid #2a3328; color: var(--muted);
+      padding: 6px 8px; cursor: pointer;
+    }
+    .tab.on, .tab:hover { color: #071008; background: var(--lime); border-color: var(--lime); }
+    .row {
+      display: grid; grid-template-columns: 40px 1fr 80px; gap: 8px;
+      padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+      font-family: "JetBrains Mono", monospace; font-size: 13px;
+    }
+    .row b { color: var(--lime); }
+    .out { margin-top: 10px; border: 1px dashed rgba(61,184,255,.5); padding: 8px; }
+    .out small { display: block; color: var(--blue); letter-spacing: .16em; font-size: 10px; margin-bottom: 4px; }
+    footer { margin-top: 26px; color: #66705f; font-family: "JetBrains Mono", monospace; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="kicker">MATCH READY // HUD</div>
+        <h1>TYPE<span>STRIKE</span></h1>
+        <p class="lead">
+          競技向けのタイピング対戦ボード。長文は日本語をローマ字で、コーディングは頻出 1 行を正確に。
+          ミスは即ペナルティ。3 秒後にその課題は先頭から再開する。
+        </p>
+      </div>
+      <a class="back" href="../index.html">COMPARE</a>
+    </header>
+    <div class="layout">
+      <section class="frame">
+        <h2>SELECT LOADOUT</h2>
+        <div class="modes">
+          <a class="mode" href="./play.html"><span class="meta">LONG TEXT</span><b>長文モード</b><p>30〜60文字の日本語。ローマ字入力。</p><span class="t">3:00</span></a>
+          <a class="mode" href="./play.html"><span class="meta">LONG TEXT</span><b>長文モード</b><p>同じルール。5分の持久戦。</p><span class="t">5:00</span></a>
+          <a class="mode" href="./play.html"><span class="meta">CODING</span><b>コーディング</b><p>HTML / CSS / JS / Java / C# / C++</p><span class="t">3:00</span></a>
+          <a class="mode" href="./play.html"><span class="meta">CODING</span><b>コーディング</b><p>空白込み。精度がスコアを分ける。</p><span class="t">5:00</span></a>
+        </div>
+      </section>
+      <section class="frame">
+        <h2>LEADERBOARD</h2>
+        <div class="tabs">
+          <button class="tab on" data-board="l3">長文 3</button>
+          <button class="tab" data-board="l5">長文 5</button>
+          <button class="tab" data-board="c3">コード 3</button>
+          <button class="tab" data-board="c5">コード 5</button>
+        </div>
+        <div id="rows"></div>
+        <div class="out">
+          <small>UNRANKED</small>
+          <div class="row" style="border:0;padding:0"><b>--</b><span>YOU</span><span>0</span></div>
+        </div>
+      </section>
+    </div>
+    <footer>案C / eスポーツ HUD — ライム × エレクトリックブルー、シャープなフレーム</footer>
+  </div>
+  <script>
+    const boards = {
+      l3: [["01","AKIRA",42800],["02","NEON",40120],["03","YUKI",38950],["04","KAI",36010],["05","RIO",34440],["06","HAL",32100],["07","MIO",30080],["08","ZEN",28880],["09","NOA",27110],["10","REN",25040]],
+      l5: [["01","NEON",70210],["02","AKIRA",68800],["03","HAL",65040],["04","YUKI",63330],["05","RIO",61020],["06","KAI",59000],["07","MIO",54010],["08","ZEN",52110],["09","NOA",49990],["10","REN",47000]],
+      c3: [["01","DEV",35500],["02","BYTE",34010],["03","NULL",32990],["04","CSS",30000],["05","JAVA",28880],["06","CPP",27010],["07","HTML",25550],["08","CS",24000],["09","JS",22110],["10","SQL",20040]],
+      c5: [["01","BYTE",61000],["02","DEV",59880],["03","NULL",57110],["04","JAVA",54000],["05","CPP",52020],["06","CSS",49990],["07","HTML",47010],["08","JS",45550],["09","CS",43000],["10","SQL",40110]]
+    };
+    const rows = document.getElementById("rows");
+    const render = (k) => { rows.innerHTML = boards[k].map(([r,n,s]) => `<div class="row"><b>${r}</b><span>${n}</span><span>${s.toLocaleString()}</span></div>`).join(""); };
+    render("l3");
+    document.querySelectorAll(".tab").forEach((btn) => btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach((b) => b.classList.remove("on"));
+      btn.classList.add("on");
+      render(btn.dataset.board);
+    }));
+  </script>
+</body>
+</html>

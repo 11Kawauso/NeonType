@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>案B プレイ — レトロ・シンセウェーブ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Share+Tech+Mono&family=M+PLUS+1p:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root { --pink:#ff2bd1; --purple:#b967ff; --cyan:#01cdfe; --done:#7a6588; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: "M PLUS 1p", sans-serif; color: #ffe9fb; background: #090014; overflow: hidden;
+    }
+    .sky {
+      position: fixed; inset: 0 0 46% 0;
+      background: radial-gradient(circle at 50% 130%, #ff9a3c 0 10%, #ff2bd1 30%, #2a0850 60%, #090014 80%);
+    }
+    .grid {
+      position: fixed; left: -10%; right: -10%; bottom: 0; height: 48%;
+      background-image:
+        linear-gradient(rgba(255,43,209,.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(1,205,254,.22) 1px, transparent 1px);
+      background-size: 64px 36px;
+      transform: perspective(380px) rotateX(64deg);
+      transform-origin: center top;
+    }
+    .scan {
+      position: fixed; inset: 0; pointer-events: none; z-index: 6;
+      background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,.2) 2px 3px);
+      opacity: .32;
+    }
+    .hud { position: relative; height: 100%; z-index: 1; }
+    .timer {
+      position: absolute; top: 20px; left: 24px;
+      font-family: Audiowide, sans-serif; font-size: 40px; color: var(--cyan);
+      text-shadow: 0 0 12px rgba(1,205,254,.8), 3px 3px 0 #5b0a7a;
+    }
+    .timer.warn { color: #ff3d6e; animation: pop .35s ease; text-shadow: 0 0 16px #ff3d6e; }
+    .right-top { position: absolute; top: 18px; right: 24px; text-align: right; }
+    .end {
+      font-family: Audiowide, sans-serif; font-size: 11px; letter-spacing: .14em;
+      color: var(--pink); background: transparent; border: 2px solid var(--pink);
+      padding: 6px 10px; cursor: pointer; box-shadow: 3px 3px 0 var(--cyan);
+    }
+    .score-label { margin-top: 10px; font-family: "Share Tech Mono", monospace; color: var(--purple); letter-spacing: .2em; font-size: 12px; }
+    .score { font-family: Audiowide, sans-serif; font-size: 32px; color: #fff; text-shadow: 0 0 12px var(--pink); }
+    .score-wrap { position: relative; }
+    .delta { position: absolute; right: 0; top: 100%; font-family: Audiowide, sans-serif; font-size: 16px; opacity: 0; }
+    .delta.plus {
+      background: linear-gradient(90deg,#ff4d6d,#ffd166,#4ade80,#38bdf8,#c084fc);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: fadeDelta 1s ease forwards;
+    }
+    .delta.minus { color: #ff3d6e; animation: fadeDelta 1s ease forwards; }
+    .stage { position: absolute; left: 50%; top: 15%; transform: translateX(-50%); width: min(900px, 92vw); text-align: center; }
+    .source {
+      display: inline-block; margin-bottom: 12px; font-family: "Share Tech Mono", monospace;
+      color: var(--cyan); border: 1px solid var(--cyan); padding: 3px 10px; letter-spacing: .16em;
+    }
+    .jp { font-size: clamp(24px, 3.2vw, 34px); font-weight: 800; line-height: 1.7; }
+    .roma { margin-top: 12px; font-family: "Share Tech Mono", monospace; font-size: clamp(16px, 2.2vw, 22px); line-height: 1.7; }
+    .ch { color: #fff; }
+    .ch.done { color: var(--done); }
+    .ch.cur { color: var(--pink); text-shadow: 0 0 10px #ff2bd1, 0 0 18px #01cdfe; border-bottom: 2px solid var(--pink); animation: blink 1s steps(1) infinite; }
+    .kb-wrap { position: absolute; left: 50%; bottom: 6%; transform: translateX(-50%); width: min(960px, 96vw); }
+    .kb {
+      display: grid; gap: 6px; padding: 14px;
+      background: rgba(16,0,32,.72); border: 2px solid var(--purple);
+      box-shadow: 0 0 24px rgba(255,43,209,.18);
+    }
+    .kb-row { display: flex; justify-content: center; gap: 6px; }
+    .key {
+      min-width: 40px; height: 40px; padding: 0 7px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(185,103,255,.4); background: rgba(255,255,255,.03);
+      font-family: "Share Tech Mono", monospace; color: #efc8ff;
+    }
+    .key.wide { min-width: 70px; }
+    .key.space { min-width: 260px; }
+    .key.lit { background: var(--pink); color: #1a0024; box-shadow: 0 0 16px var(--pink), 0 0 28px var(--cyan); }
+    .combo { position: absolute; right: 28px; bottom: 20%; transform: rotate(-7deg); text-align: center; pointer-events: none; }
+    .perfect {
+      font-family: Audiowide, sans-serif; font-size: 20px;
+      background: linear-gradient(90deg,#ff4d6d,#ffd166,#4ade80,#38bdf8,#c084fc,#ff4d6d);
+      background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: rainbow 1s linear, fadeDelta 1s ease forwards; margin-bottom: 4px;
+    }
+    .combo-num {
+      font-family: Audiowide, sans-serif; font-size: 88px; line-height: .9; color: #ffe08a;
+      filter: drop-shadow(0 0 10px #ff7a18) drop-shadow(0 0 22px #ff2bd1);
+      position: relative;
+    }
+    .combo-num.hot { font-size: 104px; }
+    .combo-num.grow { animation: grow .28s ease; }
+    .combo-num::before {
+      content: ""; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
+      width: 90px; height: 50px; background: radial-gradient(circle at 50% 80%, #ffb347, #ff2bd1 45%, transparent 70%);
+      filter: blur(8px);
+    }
+    .combo-label { font-family: Audiowide, sans-serif; letter-spacing: .35em; margin-top: 8px; color: #ffc2ec; }
+    .tools { position: absolute; left: 20px; bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; z-index: 3; }
+    .tools a, .tools button {
+      font-family: "Share Tech Mono", monospace; font-size: 12px; color: #d7b3ea;
+      background: rgba(9,0,20,.6); border: 1px solid #7b4ea3; padding: 6px 9px; cursor: pointer; text-decoration: none;
+    }
+    .miss {
+      display: none; position: fixed; inset: 0; z-index: 20; background: rgba(120,0,40,.58);
+      align-items: center; justify-content: center;
+    }
+    .miss.show { display: flex; }
+    .ring-wrap { position: relative; width: 220px; height: 220px; }
+    .ring-wrap svg { transform: rotate(-90deg); }
+    .count {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      font-family: Audiowide, sans-serif; font-size: 88px; text-shadow: 0 0 18px #fff, 0 0 30px var(--pink);
+    }
+    @keyframes blink { 50% { opacity: .3; } }
+    @keyframes fadeDelta { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
+    @keyframes pop { 40% { transform: scale(1.18); } }
+    @keyframes grow { 40% { transform: scale(1.22); } }
+    @keyframes rainbow { to { background-position: 200% 0; } }
+  </style>
+</head>
+<body>
+  <div class="sky"></div>
+  <div class="grid"></div>
+  <div class="scan"></div>
+  <div class="hud">
+    <div class="timer" id="timer">2:47</div>
+    <div class="right-top">
+      <button class="end" id="endBtn">END</button>
+      <div class="score-wrap">
+        <div class="score-label">SCORE</div>
+        <div class="score" id="score">12,430</div>
+        <div class="delta" id="delta"></div>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="source">日常会話より</div>
+      <div class="jp" id="jp"></div>
+      <div class="roma" id="roma"></div>
+    </div>
+    <div class="combo">
+      <div class="perfect" id="perfect" hidden>Perfect!</div>
+      <div class="combo-num" id="comboNum">3</div>
+      <div class="combo-label" id="comboLabel">コンボ</div>
+    </div>
+    <div class="kb-wrap"><div class="kb" id="kb"></div></div>
+    <div class="tools">
+      <a href="./start.html">スタートへ</a>
+      <a href="../index.html">比較一覧</a>
+      <button type="button" id="missBtn">ミス演出</button>
+      <button type="button" id="perfectBtn">Perfect演出</button>
+      <button type="button" id="warnBtn">残り10秒</button>
+    </div>
+  </div>
+  <div class="miss" id="miss">
+    <div class="ring-wrap">
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        <circle cx="110" cy="110" r="96" stroke="rgba(255,255,255,.18)" stroke-width="10" fill="none" />
+        <circle id="arc" cx="110" cy="110" r="96" stroke="#fff" stroke-width="10" fill="none" stroke-dasharray="603" stroke-linecap="round" />
+      </svg>
+      <div class="count" id="count">3</div>
+    </div>
+  </div>
+  <script>
+    const jpText = "週末は友達と新しいカフェに行って、ゆっくり話をしようと思います。";
+    const romaText = "shuumatsu wa tomodachi to atarashii kafe ni itte, yukkuri hanashi o shiyou to omoimasu.";
+    const jpEl = document.getElementById("jp");
+    const romaEl = document.getElementById("roma");
+    const kbEl = document.getElementById("kb");
+    const scoreEl = document.getElementById("score");
+    const deltaEl = document.getElementById("delta");
+    const timerEl = document.getElementById("timer");
+    const comboNum = document.getElementById("comboNum");
+    const perfectEl = document.getElementById("perfect");
+    let jpIndex = 8, romaIndex = 22, score = 12430, combo = 3, remain = 167;
+    function paint(el, text, idx) {
+      el.innerHTML = [...text].map((ch, i) => {
+        const cls = i < idx ? "done" : i === idx ? "cur" : "";
+        return `<span class="ch ${cls}">${ch === " " ? "&nbsp;" : ch}</span>`;
+      }).join("");
+    }
+    function renderText() { paint(jpEl, jpText, jpIndex); paint(romaEl, romaText, romaIndex); }
+    const rows = [["`","1","2","3","4","5","6","7","8","9","0","-","="],["Q","W","E","R","T","Y","U","I","O","P","[","]"],["A","S","D","F","G","H","J","K","L",";","'"],["Z","X","C","V","B","N","M",",",".","/"]];
+    kbEl.innerHTML = rows.map((r, i) => {
+      const extras = i === 1 ? `<div class="key wide">TAB</div>` : i === 2 ? `<div class="key wide">CAPS</div>` : i === 3 ? `<div class="key wide">SHIFT</div>` : "";
+      return `<div class="kb-row">${extras}${r.map((k) => `<div class="key" data-k="${k.toLowerCase()}">${k}</div>`).join("")}</div>`;
+    }).join("") + `<div class="kb-row"><div class="key space" data-k=" ">SPACE</div></div>`;
+    function light(ch) {
+      document.querySelectorAll(".key.lit").forEach((k) => k.classList.remove("lit"));
+      const key = [...document.querySelectorAll(".key")].find((k) => k.dataset.k === ch.toLowerCase());
+      if (key) { key.classList.add("lit"); setTimeout(() => key.classList.remove("lit"), 160); }
+    }
+    function showDelta(n) {
+      deltaEl.className = "delta";
+      deltaEl.textContent = (n >= 0 ? "+" : "") + n + "pt";
+      void deltaEl.offsetWidth;
+      deltaEl.classList.add(n >= 0 ? "plus" : "minus");
+    }
+    function setScore(n) { score = Math.max(0, n); scoreEl.textContent = score.toLocaleString(); }
+    function setCombo(n) {
+      combo = n;
+      const on = combo > 0;
+      comboNum.style.display = on ? "" : "none";
+      document.getElementById("comboLabel").style.display = on ? "" : "none";
+      if (!on) return;
+      comboNum.textContent = combo;
+      comboNum.classList.toggle("hot", combo >= 5);
+    }
+    function tickDemo() {
+      if (romaIndex >= romaText.length) {
+        romaIndex = 0; jpIndex = 0; setCombo(combo + 1);
+        comboNum.classList.remove("grow"); void comboNum.offsetWidth; comboNum.classList.add("grow");
+        const bonus = Math.round(1000 * Math.min(1 + combo * 0.1, 1.5));
+        setScore(score + bonus); showDelta(bonus); return;
+      }
+      light(romaText[romaIndex]);
+      romaIndex += 1;
+      if (romaIndex % 3 === 0 && jpIndex < jpText.length) jpIndex += 1;
+      const gain = Math.round(100 * Math.min(1 + combo * 0.1, 1.5));
+      setScore(score + gain); showDelta(gain); renderText();
+    }
+    renderText();
+    setCombo(3);
+    setInterval(tickDemo, 420);
+    setInterval(() => {
+      if (document.getElementById("miss").classList.contains("show")) return;
+      remain = Math.max(0, remain - 1);
+      timerEl.textContent = `${Math.floor(remain / 60)}:${String(remain % 60).padStart(2, "0")}`;
+      if (remain <= 10) { timerEl.classList.remove("warn"); void timerEl.offsetWidth; timerEl.classList.add("warn"); }
+    }, 1000);
+    document.getElementById("missBtn").onclick = () => {
+      const miss = document.getElementById("miss"); const arc = document.getElementById("arc"); const count = document.getElementById("count");
+      miss.classList.add("show"); setCombo(0);
+      setScore(score - 500); showDelta(-500);
+      let left = 3; count.textContent = left; const started = performance.now();
+      function frame(now) {
+        const t = Math.min(1, (now - started) / 3000);
+        arc.style.strokeDashoffset = String(603 * t);
+        const next = 3 - Math.floor(t * 3);
+        if (next !== left && next > 0) { left = next; count.textContent = left; }
+        if (t < 1) requestAnimationFrame(frame);
+        else { miss.classList.remove("show"); arc.style.strokeDashoffset = "0"; romaIndex = 0; jpIndex = 0; renderText(); }
+      }
+      requestAnimationFrame(frame);
+    };
+    document.getElementById("perfectBtn").onclick = () => {
+      perfectEl.hidden = false;
+      const bonus = Math.round(1000 * Math.min(1 + (combo + 1) * 0.1, 1.5));
+      setCombo(combo + 1);
+      comboNum.classList.remove("grow"); void comboNum.offsetWidth; comboNum.classList.add("grow");
+      setScore(score + bonus); showDelta(bonus);
+      setTimeout(() => { perfectEl.hidden = true; }, 1000);
+    };
+    document.getElementById("warnBtn").onclick = () => { remain = 10; };
+    document.getElementById("endBtn").onclick = () => {
+      if (confirm("プレイを終了しますか？（モックのためスタートへ戻ります）")) location.href = "./start.html";
+    };
+    window.addEventListener("keydown", (e) => { if (e.key.length === 1) light(e.key); });
+  </script>
+</body>
+</html>

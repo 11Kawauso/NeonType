@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>案A プレイ — サイバーパンク・アーケード</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Rajdhani:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #050814;
+      --cyan: #00f6ff;
+      --magenta: #ff2ec8;
+      --text: #f4f8ff;
+      --done: #6d7b96;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: "Zen Kaku Gothic New", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(700px 380px at 80% 0%, rgba(255,46,200,.16), transparent 55%),
+        radial-gradient(700px 400px at 10% 100%, rgba(0,246,255,.12), transparent 50%),
+        #050814;
+      overflow: hidden;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(0,246,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,246,255,.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .hud { position: relative; height: 100%; }
+    .timer {
+      position: absolute; top: 22px; left: 28px;
+      font-family: Orbitron, sans-serif; font-size: 42px; letter-spacing: .08em;
+      text-shadow: 0 0 16px rgba(0,246,255,.55);
+    }
+    .timer.warn { color: #ff3b5c; animation: pop .35s ease; text-shadow: 0 0 18px rgba(255,59,92,.8); }
+    .right-top { position: absolute; top: 20px; right: 28px; text-align: right; }
+    .end {
+      font-family: Orbitron, sans-serif; font-size: 11px; letter-spacing: .2em;
+      color: var(--magenta); background: transparent;
+      border: 1px solid var(--magenta); padding: 7px 12px; cursor: pointer;
+      box-shadow: 0 0 12px rgba(255,46,200,.25);
+    }
+    .end:hover { background: rgba(255,46,200,.15); }
+    .score-wrap { margin-top: 10px; position: relative; }
+    .score-label { font-family: Orbitron, sans-serif; font-size: 10px; letter-spacing: .24em; color: #8aa0c6; }
+    .score {
+      font-family: Orbitron, sans-serif; font-size: 34px;
+      text-shadow: 0 0 14px rgba(0,246,255,.45);
+    }
+    .delta {
+      position: absolute; right: 0; top: 100%; margin-top: 4px;
+      font-family: Orbitron, sans-serif; font-size: 18px; opacity: 0;
+    }
+    .delta.plus {
+      background: linear-gradient(90deg, #ff4d6d, #ffd166, #4ade80, #38bdf8, #c084fc);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: fadeDelta 1s ease forwards;
+    }
+    .delta.minus { color: #ff3b5c; animation: fadeDelta 1s ease forwards; }
+    .stage { position: absolute; left: 50%; top: 16%; transform: translateX(-50%); width: min(920px, 92vw); text-align: center; }
+    .source {
+      display: inline-block; margin-bottom: 14px; padding: 4px 12px;
+      border: 1px solid rgba(0,246,255,.35); color: var(--cyan);
+      font-family: Orbitron, sans-serif; font-size: 10px; letter-spacing: .2em;
+    }
+    .jp, .roma { line-height: 1.7; word-break: break-all; }
+    .jp { font-size: clamp(26px, 3.4vw, 36px); font-weight: 700; }
+    .roma { margin-top: 14px; font-family: Rajdhani, monospace; font-size: clamp(18px, 2.4vw, 26px); letter-spacing: .04em; }
+    .ch { color: #fff; }
+    .ch.done { color: var(--done); }
+    .ch.cur {
+      color: var(--cyan);
+      text-shadow: 0 0 10px #00f6ff, 0 0 22px #ff2ec8;
+      border-bottom: 2px solid var(--cyan);
+      animation: blink 1s steps(1) infinite;
+    }
+    .kb-wrap { position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); width: min(980px, 96vw); }
+    .kb {
+      display: grid; gap: 6px; padding: 16px;
+      background: rgba(8,14,36,.7); border: 1px solid rgba(0,246,255,.22);
+      box-shadow: 0 0 30px rgba(0,246,255,.08), inset 0 0 30px rgba(255,46,200,.04);
+    }
+    .kb-row { display: flex; justify-content: center; gap: 6px; }
+    .key {
+      min-width: 42px; height: 42px; padding: 0 8px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(255,255,255,.12); border-radius: 4px;
+      background: rgba(255,255,255,.03);
+      font-family: Rajdhani, sans-serif; font-size: 14px; color: #c9d6ee;
+    }
+    .key.wide { min-width: 72px; }
+    .key.space { min-width: 280px; }
+    .key.lit {
+      color: #041018; background: var(--cyan); border-color: var(--cyan);
+      box-shadow: 0 0 16px rgba(0,246,255,.75), 0 0 28px rgba(255,46,200,.35);
+    }
+    .combo {
+      position: absolute; right: 36px; bottom: 18%;
+      transform: rotate(-8deg); text-align: center; pointer-events: none;
+    }
+    .perfect {
+      font-family: Orbitron, sans-serif; font-size: 22px; letter-spacing: .08em;
+      background: linear-gradient(90deg, #ff4d6d, #ffd166, #4ade80, #38bdf8, #c084fc, #ff4d6d);
+      background-size: 200% 100%;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: rainbow 1s linear, fadeDelta 1s ease forwards;
+      margin-bottom: 4px;
+    }
+    .combo-num {
+      font-family: Orbitron, sans-serif; font-weight: 800; font-size: 92px; line-height: .9;
+      color: #fff6d8; position: relative;
+      filter: drop-shadow(0 0 10px #ff7a18) drop-shadow(0 0 24px #ff2ec8);
+    }
+    .combo-num.grow { animation: grow .28s ease; }
+    .combo-num::before, .combo-num::after {
+      content: ""; position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%);
+      width: 70px; height: 40px; pointer-events: none;
+      background: radial-gradient(circle at 50% 80%, #ffb347, #ff2ec8 40%, transparent 70%);
+      filter: blur(6px); opacity: .85;
+    }
+    .combo-num::after { width: 110px; height: 70px; opacity: .45; filter: blur(14px); }
+    .combo-num.hot { font-size: 108px; filter: drop-shadow(0 0 14px #ff9a1f) drop-shadow(0 0 36px #ff2a00); }
+    .combo-label {
+      margin-top: 8px; font-family: Orbitron, sans-serif; letter-spacing: .4em;
+      font-size: 14px; color: #ffd6a8;
+    }
+    .tools {
+      position: absolute; left: 24px; bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap; z-index: 3;
+    }
+    .tools button, .back {
+      font-family: Orbitron, sans-serif; font-size: 10px; letter-spacing: .12em;
+      border: 1px solid rgba(138,160,198,.35); background: rgba(5,8,20,.6);
+      color: #9ab0d2; padding: 7px 10px; cursor: pointer; text-decoration: none;
+    }
+    .tools button:hover, .back:hover { color: var(--cyan); border-color: var(--cyan); }
+    .miss {
+      display: none; position: fixed; inset: 0; z-index: 20;
+      background: rgba(140, 0, 24, .55);
+      align-items: center; justify-content: center;
+    }
+    .miss.show { display: flex; }
+    .ring-wrap { position: relative; width: 220px; height: 220px; }
+    .ring-wrap svg { transform: rotate(-90deg); }
+    .count {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      font-family: Orbitron, sans-serif; font-size: 92px;
+      text-shadow: 0 0 20px #fff, 0 0 40px #ff2ec8;
+    }
+    @keyframes blink { 50% { opacity: .35; } }
+    @keyframes fadeDelta { 0% { opacity: 1; transform: translateY(0); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
+    @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+    @keyframes grow { 0% { transform: scale(1); } 40% { transform: scale(1.22); } 100% { transform: scale(1); } }
+    @keyframes rainbow { to { background-position: 200% 0; } }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="timer" id="timer">2:47</div>
+    <div class="right-top">
+      <button class="end" id="endBtn">END</button>
+      <div class="score-wrap">
+        <div class="score-label">SCORE</div>
+        <div class="score" id="score">12,430</div>
+        <div class="delta" id="delta"></div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="source">日常会話より</div>
+      <div class="jp" id="jp"></div>
+      <div class="roma" id="roma"></div>
+    </div>
+
+    <div class="combo" id="comboBox">
+      <div class="perfect" id="perfect" hidden>Perfect!</div>
+      <div class="combo-num" id="comboNum">3</div>
+      <div class="combo-label" id="comboLabel">コンボ</div>
+    </div>
+
+    <div class="kb-wrap"><div class="kb" id="kb"></div></div>
+    <div class="tools">
+      <a class="back" href="./start.html">スタートへ</a>
+      <a class="back" href="../index.html">比較一覧</a>
+      <button type="button" id="missBtn">ミス演出</button>
+      <button type="button" id="perfectBtn">Perfect演出</button>
+      <button type="button" id="warnBtn">残り10秒</button>
+    </div>
+  </div>
+
+  <div class="miss" id="miss">
+    <div class="ring-wrap">
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        <circle cx="110" cy="110" r="96" stroke="rgba(255,255,255,.15)" stroke-width="10" fill="none" />
+        <circle id="arc" cx="110" cy="110" r="96" stroke="#fff" stroke-width="10" fill="none"
+          stroke-dasharray="603" stroke-dashoffset="0" stroke-linecap="round" />
+      </svg>
+      <div class="count" id="count">3</div>
+    </div>
+  </div>
+
+  <script>
+    const jpText = "週末は友達と新しいカフェに行って、ゆっくり話をしようと思います。";
+    const romaText = "shuumatsu wa tomodachi to atarashii kafe ni itte, yukkuri hanashi o shiyou to omoimasu.";
+    const jpEl = document.getElementById("jp");
+    const romaEl = document.getElementById("roma");
+    const kbEl = document.getElementById("kb");
+    const scoreEl = document.getElementById("score");
+    const deltaEl = document.getElementById("delta");
+    const timerEl = document.getElementById("timer");
+    const comboNum = document.getElementById("comboNum");
+    const perfectEl = document.getElementById("perfect");
+    let jpIndex = 8;
+    let romaIndex = 22;
+    let score = 12430;
+    let combo = 3;
+    let remain = 167;
+
+    function paint(el, text, idx) {
+      el.innerHTML = [...text].map((ch, i) => {
+        const cls = i < idx ? "done" : i === idx ? "cur" : "";
+        return `<span class="ch ${cls}">${ch === " " ? "&nbsp;" : ch}</span>`;
+      }).join("");
+    }
+    function renderText() {
+      paint(jpEl, jpText, jpIndex);
+      paint(romaEl, romaText, romaIndex);
+    }
+    const rows = [
+      ["`","1","2","3","4","5","6","7","8","9","0","-","="],
+      ["Q","W","E","R","T","Y","U","I","O","P","[","]"],
+      ["A","S","D","F","G","H","J","K","L",";","'"],
+      ["Z","X","C","V","B","N","M",",",".","/"]
+    ];
+    kbEl.innerHTML = rows.map((r, i) => {
+      const extras = i === 1 ? `<div class="key wide">TAB</div>` : i === 2 ? `<div class="key wide">CAPS</div>` : i === 3 ? `<div class="key wide">SHIFT</div>` : "";
+      const keys = r.map((k) => `<div class="key" data-k="${k.toLowerCase()}">${k}</div>`).join("");
+      return `<div class="kb-row">${extras}${keys}</div>`;
+    }).join("") + `<div class="kb-row"><div class="key space" data-k=" ">SPACE</div></div>`;
+
+    function light(ch) {
+      document.querySelectorAll(".key.lit").forEach((k) => k.classList.remove("lit"));
+      const key = [...document.querySelectorAll(".key")].find((k) => k.dataset.k === ch.toLowerCase());
+      if (key) {
+        key.classList.add("lit");
+        setTimeout(() => key.classList.remove("lit"), 160);
+      }
+    }
+    function showDelta(n) {
+      deltaEl.className = "delta " + (n >= 0 ? "plus" : "minus");
+      deltaEl.textContent = (n >= 0 ? "+" : "") + n + "pt";
+      void deltaEl.offsetWidth;
+      deltaEl.classList.add(n >= 0 ? "plus" : "minus");
+    }
+    function setScore(n) {
+      score = Math.max(0, n);
+      scoreEl.textContent = score.toLocaleString();
+    }
+    function setCombo(n) {
+      combo = n;
+      const on = combo > 0;
+      comboNum.style.display = on ? "" : "none";
+      document.getElementById("comboLabel").style.display = on ? "" : "none";
+      if (!on) return;
+      comboNum.textContent = combo;
+      comboNum.classList.toggle("hot", combo >= 5);
+    }
+    function tickDemo() {
+      if (romaIndex >= romaText.length) {
+        romaIndex = 0; jpIndex = 0;
+        setCombo(combo + 1);
+        comboNum.classList.remove("grow");
+        void comboNum.offsetWidth;
+        comboNum.classList.add("grow");
+        const bonus = Math.round(1000 * Math.min(1 + combo * 0.1, 1.5));
+        setScore(score + bonus);
+        showDelta(bonus);
+        return;
+      }
+      const ch = romaText[romaIndex];
+      light(ch);
+      romaIndex += 1;
+      if (romaIndex % 3 === 0 && jpIndex < jpText.length) jpIndex += 1;
+      const gain = Math.round(100 * Math.min(1 + combo * 0.1, 1.5));
+      setScore(score + gain);
+      showDelta(gain);
+      renderText();
+    }
+    renderText();
+    setCombo(3);
+    setInterval(tickDemo, 420);
+
+    setInterval(() => {
+      if (document.getElementById("miss").classList.contains("show")) return;
+      remain = Math.max(0, remain - 1);
+      const m = String(Math.floor(remain / 60));
+      const s = String(remain % 60).padStart(2, "0");
+      timerEl.textContent = `${m}:${s}`;
+      if (remain <= 10) {
+        timerEl.classList.remove("warn");
+        void timerEl.offsetWidth;
+        timerEl.classList.add("warn");
+      }
+    }, 1000);
+
+    document.getElementById("missBtn").onclick = () => {
+      const miss = document.getElementById("miss");
+      const arc = document.getElementById("arc");
+      const count = document.getElementById("count");
+      miss.classList.add("show");
+      setCombo(0);
+      setScore(score - 500);
+      showDelta(-500);
+      let left = 3;
+      count.textContent = left;
+      const total = 603;
+      const started = performance.now();
+      function frame(now) {
+        const t = Math.min(1, (now - started) / 3000);
+        arc.style.strokeDashoffset = String(total * t);
+        const next = 3 - Math.floor(t * 3);
+        if (next !== left && next > 0) { left = next; count.textContent = left; }
+        if (t < 1) requestAnimationFrame(frame);
+        else {
+          miss.classList.remove("show");
+          arc.style.strokeDashoffset = "0";
+          romaIndex = 0; jpIndex = 0; renderText();
+        }
+      }
+      requestAnimationFrame(frame);
+    };
+    document.getElementById("perfectBtn").onclick = () => {
+      perfectEl.hidden = false;
+      const bonus = Math.round(1000 * Math.min(1 + (combo + 1) * 0.1, 1.5));
+      setCombo(combo + 1);
+      comboNum.classList.remove("grow");
+      void comboNum.offsetWidth;
+      comboNum.classList.add("grow");
+      setScore(score + bonus);
+      showDelta(bonus);
+      setTimeout(() => { perfectEl.hidden = true; }, 1000);
+    };
+    document.getElementById("warnBtn").onclick = () => { remain = 10; };
+    document.getElementById("endBtn").onclick = () => {
+      if (confirm("プレイを終了しますか？（モックのためスタートへ戻ります）")) {
+        location.href = "./start.html";
+      }
+    };
+    window.addEventListener("keydown", (e) => {
+      if (e.key.length === 1) light(e.key);
+    });
+  </script>
+</body>
+</html>

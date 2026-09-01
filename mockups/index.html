@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UI/UX 方向性 — 3案比較</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;700&family=Outfit:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: "IBM Plex Sans JP", sans-serif;
+      background: #101114; color: #eef0f4;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 40px 22px 72px; }
+    h1 { font-family: Outfit, sans-serif; font-size: 34px; margin: 0 0 8px; }
+    .lead { color: #a8b0bd; line-height: 1.8; max-width: 720px; }
+    .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
+    @media (max-width: 900px) { .cards { grid-template-columns: 1fr; } }
+    .card {
+      background: #17191e; border: 1px solid #2a2e36; padding: 18px 18px 16px;
+      display: flex; flex-direction: column; min-height: 100%;
+    }
+    .swatch { height: 72px; margin: 0 -18px 16px; }
+    .a .swatch { background: linear-gradient(120deg, #050814, #00f6ff 55%, #ff2ec8); }
+    .b .swatch { background: linear-gradient(120deg, #090014, #b967ff 45%, #ff2bd1 75%, #01cdfe); }
+    .c .swatch { background: linear-gradient(120deg, #07090c, #3db8ff 45%, #c8ff3d); }
+    .tag { font-size: 11px; letter-spacing: .16em; color: #8b93a1; }
+    h2 { margin: 6px 0 8px; font-size: 20px; }
+    p { margin: 0 0 14px; color: #b7bec9; font-size: 14px; line-height: 1.7; }
+    ul { margin: 0 0 16px; padding-left: 18px; color: #c5ccd6; font-size: 13px; line-height: 1.7; }
+    .btns { display: flex; gap: 8px; margin-top: auto; }
+    a {
+      flex: 1; text-align: center; text-decoration: none; color: #101114;
+      background: #e8ecf3; padding: 10px 8px; font-weight: 700; font-size: 13px;
+    }
+    a.alt { background: transparent; color: #e8ecf3; border: 1px solid #3a404c; }
+    footer { margin-top: 28px; color: #7d8694; font-size: 13px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>UI/UX 方向性の比較</h1>
+    <p class="lead">
+      3案とも「黒または濃紺ベース + ネオン + ゲーム風 + 演出多め」という共通条件の中で、
+      配色と雰囲気だけを変えています。スタート画面とプレイ画面を開き、演出ボタン（ミス / Perfect / 残り10秒）も試してください。
+    </p>
+    <div class="cards">
+      <article class="card a">
+        <div class="swatch"></div>
+        <div class="tag">案 A</div>
+        <h2>サイバーパンク・アーケード</h2>
+        <p>濃紺ベースにシアンとマゼンタ。グローが強く、アーケード筐体のような派手さ。</p>
+        <ul>
+          <li>Orbitron 系の未来フォント</li>
+          <li>ネオン縁と格子背景</li>
+          <li>演出量が最も多い方向</li>
+        </ul>
+        <div class="btns">
+          <a href="./a/start.html">スタート</a>
+          <a class="alt" href="./a/play.html">プレイ</a>
+        </div>
+      </article>
+      <article class="card b">
+        <div class="swatch"></div>
+        <div class="tag">案 B</div>
+        <h2>レトロ・シンセウェーブ</h2>
+        <p>黒ベースにパープルとピンク。夕日、スキャンライン、遠近グリッドの 80s 感。</p>
+        <ul>
+          <li>Audiowide のレトロ見出し</li>
+          <li>カセット／ハイスコア表の空気</li>
+          <li>ノスタルジックで物語っぽい</li>
+        </ul>
+        <div class="btns">
+          <a href="./b/start.html">スタート</a>
+          <a class="alt" href="./b/play.html">プレイ</a>
+        </div>
+      </article>
+      <article class="card c">
+        <div class="swatch"></div>
+        <div class="tag">案 C</div>
+        <h2>eスポーツ HUD</h2>
+        <p>黒ベースにライムとエレクトリックブルー。角のフレームが効いた競技画面。</p>
+        <ul>
+          <li>Exo 2 + 等幅の HUD 感</li>
+          <li>装飾を削ったシャープさ</li>
+          <li>視認性と緊張感を優先</li>
+        </ul>
+        <div class="btns">
+          <a href="./c/start.html">スタート</a>
+          <a class="alt" href="./c/play.html">プレイ</a>
+        </div>
+      </article>
+    </div>
+    <footer>
+      仕様書: <code>docs/mvp-spec.md</code>。方向性が決まったら仕様書の「11. 決定した方向性」に反映します。
+      組み合わせ（例: 案Cのレイアウト + 案Aの配色）でも構いません。
+    </footer>
+  </div>
+</body>
+</html>

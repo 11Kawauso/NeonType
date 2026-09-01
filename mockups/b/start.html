@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>案B スタート — レトロ・シンセウェーブ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Share+Tech+Mono&family=M+PLUS+1p:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pink: #ff2bd1;
+      --purple: #b967ff;
+      --cyan: #01cdfe;
+      --sun1: #ff6b9d;
+      --sun2: #ffc857;
+      --text: #ffe9fb;
+      --muted: #c9a6d8;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; margin: 0; }
+    body {
+      font-family: "M PLUS 1p", sans-serif;
+      color: var(--text);
+      background: #090014;
+      overflow-x: hidden;
+    }
+    .sky {
+      position: fixed; inset: 0 0 38% 0;
+      background:
+        radial-gradient(circle at 50% 118%, #ff9a3c 0 12%, #ff2bd1 28%, #3a0a6a 58%, #090014 78%);
+    }
+    .sun {
+      position: fixed; left: 50%; top: 18%; width: 220px; height: 220px;
+      transform: translateX(-50%);
+      background: radial-gradient(circle, #ffe08a, #ff6b9d 55%, transparent 70%);
+      filter: blur(0.2px);
+      mask-image: repeating-linear-gradient(to bottom, #000 0 8px, transparent 8px 13px);
+    }
+    .grid {
+      position: fixed; left: -10%; right: -10%; bottom: 0; height: 42%;
+      background-image:
+        linear-gradient(rgba(255,43,209,.35) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(1,205,254,.28) 1px, transparent 1px);
+      background-size: 70px 40px;
+      transform: perspective(400px) rotateX(62deg);
+      transform-origin: center top;
+    }
+    .scan {
+      position: fixed; inset: 0; pointer-events: none; z-index: 8;
+      background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,.18) 2px 3px);
+      opacity: .35;
+    }
+    .wrap { position: relative; z-index: 1; max-width: 1140px; margin: 0 auto; padding: 40px 24px 72px; }
+    header { display: flex; justify-content: space-between; gap: 20px; }
+    .logo {
+      font-family: Audiowide, sans-serif; font-size: clamp(36px, 6vw, 64px);
+      line-height: 1; letter-spacing: .06em;
+      background: linear-gradient(180deg, #fff 10%, #ff9ad6 45%, #01cdfe);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 0 12px rgba(255,43,209,.6));
+    }
+    .sub { font-family: "Share Tech Mono", monospace; color: var(--cyan); letter-spacing: .28em; margin-top: 8px; }
+    .lead { max-width: 620px; color: var(--muted); line-height: 1.9; margin-top: 16px; }
+    .back {
+      font-family: "Share Tech Mono", monospace; color: var(--cyan); text-decoration: none;
+      border: 2px solid var(--cyan); padding: 8px 12px; height: fit-content;
+      box-shadow: 4px 4px 0 var(--pink);
+    }
+    .layout { display: grid; grid-template-columns: 1.1fr .9fr; gap: 22px; margin-top: 36px; }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+    h2 {
+      font-family: Audiowide, sans-serif; font-size: 14px; letter-spacing: .2em;
+      color: var(--pink); margin: 0 0 14px;
+    }
+    .modes { display: grid; gap: 12px; }
+    .mode {
+      display: flex; justify-content: space-between; align-items: center;
+      text-decoration: none; color: inherit;
+      padding: 16px 18px; background: rgba(20, 0, 40, .72);
+      border: 2px solid var(--purple);
+      box-shadow: 6px 6px 0 rgba(255,43,209,.35);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .mode:hover { transform: translate(-3px, -3px); box-shadow: 9px 9px 0 rgba(1,205,254,.45); }
+    .mode b { display: block; font-size: 22px; }
+    .mode small { color: var(--muted); }
+    .mode .t {
+      font-family: Audiowide, sans-serif; font-size: 26px; color: var(--cyan);
+      text-shadow: 0 0 12px rgba(1,205,254,.7);
+    }
+    .rank {
+      background: rgba(12, 0, 28, .75);
+      border: 2px solid var(--pink);
+      padding: 16px;
+      box-shadow: inset 0 0 30px rgba(185,103,255,.15);
+    }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .tab {
+      font-family: "Share Tech Mono", monospace; background: transparent;
+      border: 1px solid #7b4ea3; color: var(--muted); padding: 6px 8px; cursor: pointer;
+    }
+    .tab.on, .tab:hover { background: var(--pink); color: #1a0024; border-color: var(--pink); }
+    .row {
+      display: grid; grid-template-columns: 42px 1fr 80px;
+      font-family: "Share Tech Mono", monospace; padding: 7px 0;
+      border-bottom: 1px dotted rgba(255,43,209,.25); font-size: 14px;
+    }
+    .row b { color: var(--cyan); }
+    .out {
+      margin-top: 12px; border: 1px dashed var(--cyan); padding: 8px;
+      background: rgba(1,205,254,.06);
+    }
+    footer { margin-top: 28px; font-family: "Share Tech Mono", monospace; color: #8b6a9a; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="sky"></div>
+  <div class="sun"></div>
+  <div class="grid"></div>
+  <div class="scan"></div>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="sub">// WAVE 198X</div>
+        <div class="logo">RETRO TYPE</div>
+        <p class="lead">
+          カセットテープを回すように、制限時間の中で一文ずつ打ち切る。
+          長文はローマ字、コードは空白込みの 1 行。ミスしたら 3 秒の静止画、そして頭からやり直し。
+        </p>
+      </div>
+      <a class="back" href="../index.html">BACK TO CAST</a>
+    </header>
+    <div class="layout">
+      <section>
+        <h2>INSERT COIN / MODE</h2>
+        <div class="modes">
+          <a class="mode" href="./play.html"><div><b>長文モード</b><small>日本語 30〜60文字 / ローマ字</small></div><div class="t">3:00</div></a>
+          <a class="mode" href="./play.html"><div><b>長文モード</b><small>同じルール、長い夕暮れ</small></div><div class="t">5:00</div></a>
+          <a class="mode" href="./play.html"><div><b>コーディング</b><small>HTML CSS JS Java C# C++</small></div><div class="t">3:00</div></a>
+          <a class="mode" href="./play.html"><div><b>コーディング</b><small>空白も 1 文字。コンボを伸ばせ</small></div><div class="t">5:00</div></a>
+        </div>
+      </section>
+      <section class="rank">
+        <h2>HIGH SCORES</h2>
+        <div class="tabs">
+          <button class="tab on" data-board="l3">LONG 3</button>
+          <button class="tab" data-board="l5">LONG 5</button>
+          <button class="tab" data-board="c3">CODE 3</button>
+          <button class="tab" data-board="c5">CODE 5</button>
+        </div>
+        <div id="rows"></div>
+        <div class="out">
+          <div class="row" style="border:0"><b>--</b><span>YOU / UNRANKED</span><span>00000</span></div>
+        </div>
+      </section>
+    </div>
+    <footer>案B / レトロ・シンセウェーブ — パープル × ピンク、スキャンライン、遠近グリッド</footer>
+  </div>
+  <script>
+    const boards = {
+      l3: [["01","AKIRA",42800],["02","NEON",40120],["03","YUKI",38950],["04","KAI",36010],["05","RIO",34440],["06","HAL",32100],["07","MIO",30080],["08","ZEN",28880],["09","NOA",27110],["10","REN",25040]],
+      l5: [["01","NEON",70210],["02","AKIRA",68800],["03","HAL",65040],["04","YUKI",63330],["05","RIO",61020],["06","KAI",59000],["07","MIO",54010],["08","ZEN",52110],["09","NOA",49990],["10","REN",47000]],
+      c3: [["01","DEV",35500],["02","BYTE",34010],["03","NULL",32990],["04","CSS",30000],["05","JAVA",28880],["06","CPP",27010],["07","HTML",25550],["08","CS",24000],["09","JS",22110],["10","SQL",20040]],
+      c5: [["01","BYTE",61000],["02","DEV",59880],["03","NULL",57110],["04","JAVA",54000],["05","CPP",52020],["06","CSS",49990],["07","HTML",47010],["08","JS",45550],["09","CS",43000],["10","SQL",40110]]
+    };
+    const rows = document.getElementById("rows");
+    const render = (k) => {
+      rows.innerHTML = boards[k].map(([r,n,s]) => `<div class="row"><b>${r}</b><span>${n}</span><span>${s.toLocaleString()}</span></div>`).join("");
+    };
+    render("l3");
+    document.querySelectorAll(".tab").forEach((btn) => btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach((b) => b.classList.remove("on"));
+      btn.classList.add("on");
+      render(btn.dataset.board);
+    }));
+  </script>
+</body>
+</html>

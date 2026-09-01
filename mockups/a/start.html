@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>案A スタート — サイバーパンク・アーケード</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Rajdhani:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #050814;
+      --panel: rgba(8, 16, 42, 0.72);
+      --cyan: #00f6ff;
+      --magenta: #ff2ec8;
+      --violet: #8b6bff;
+      --text: #eef7ff;
+      --muted: #8aa0c6;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: "Zen Kaku Gothic New", "Rajdhani", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 15% -10%, rgba(255, 46, 200, 0.18), transparent 55%),
+        radial-gradient(800px 480px at 95% 10%, rgba(0, 246, 255, 0.16), transparent 50%),
+        linear-gradient(180deg, #070b1c 0%, #050814 45%, #0a0620 100%);
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 246, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 246, 255, 0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,.55), transparent 85%);
+      pointer-events: none;
+    }
+    .scan {
+      position: fixed; inset: 0; pointer-events: none; z-index: 8;
+      background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,.12) 2px 3px);
+      opacity: .25;
+    }
+    .wrap { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 36px 24px 64px; }
+    header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+    .brand { letter-spacing: .28em; }
+    .brand small {
+      display: block; color: var(--cyan); font-family: Orbitron, sans-serif;
+      font-size: 11px; margin-bottom: 8px;
+    }
+    h1 {
+      margin: 0; font-family: Orbitron, sans-serif; font-weight: 800;
+      font-size: clamp(34px, 5vw, 58px); letter-spacing: .08em; line-height: 1.05;
+      text-shadow: 0 0 18px rgba(0,246,255,.55), 0 0 42px rgba(255,46,200,.28);
+    }
+    h1 span { color: var(--magenta); }
+    .lead {
+      max-width: 640px; margin: 18px 0 0; color: var(--muted); line-height: 1.85; font-size: 15px;
+    }
+    .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    .chip {
+      border: 1px solid rgba(0,246,255,.35); color: var(--cyan);
+      padding: 4px 10px; font-size: 11px; letter-spacing: .16em;
+      font-family: Orbitron, sans-serif; border-radius: 999px;
+      box-shadow: 0 0 12px rgba(0,246,255,.15);
+    }
+    .ghost {
+      font-family: Orbitron, sans-serif; font-size: 11px; letter-spacing: .2em;
+      color: var(--muted); text-decoration: none; border: 1px solid rgba(138,160,198,.3);
+      padding: 10px 14px; align-self: flex-start;
+    }
+    .ghost:hover { color: var(--cyan); border-color: var(--cyan); }
+    section { margin-top: 40px; }
+    .sec-title {
+      font-family: Orbitron, sans-serif; font-size: 12px; letter-spacing: .32em;
+      color: var(--magenta); margin: 0 0 16px;
+    }
+    .modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 760px) { .modes { grid-template-columns: 1fr; } }
+    .mode {
+      display: block; text-decoration: none; color: inherit;
+      background: var(--panel); border: 1px solid rgba(0,246,255,.22);
+      padding: 22px 22px 20px; position: relative; overflow: hidden;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 0 1px rgba(255,46,200,.08), 0 12px 40px rgba(0,0,0,.35);
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .mode::after {
+      content: ""; position: absolute; inset: auto -20% -40% auto; width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(0,246,255,.2), transparent 70%);
+    }
+    .mode:hover {
+      transform: translateY(-3px);
+      border-color: var(--cyan);
+      box-shadow: 0 0 24px rgba(0,246,255,.25), 0 16px 40px rgba(0,0,0,.4);
+    }
+    .mode .kicker { font-family: Orbitron, sans-serif; font-size: 10px; letter-spacing: .24em; color: var(--cyan); }
+    .mode h2 { margin: 8px 0 6px; font-size: 26px; font-family: Rajdhani, sans-serif; letter-spacing: .06em; }
+    .mode p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .mode .time {
+      position: absolute; top: 18px; right: 18px;
+      font-family: Orbitron, sans-serif; color: var(--magenta);
+      font-size: 22px; text-shadow: 0 0 12px rgba(255,46,200,.6);
+    }
+    .layout { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+    .rank {
+      background: var(--panel); border: 1px solid rgba(139,107,255,.35);
+      padding: 18px; backdrop-filter: blur(10px);
+    }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .tab {
+      font-family: Orbitron, sans-serif; font-size: 10px; letter-spacing: .08em;
+      border: 1px solid rgba(138,160,198,.28); background: transparent; color: var(--muted);
+      padding: 7px 9px; cursor: pointer;
+    }
+    .tab.on, .tab:hover { color: var(--bg); background: var(--cyan); border-color: var(--cyan); }
+    .row {
+      display: grid; grid-template-columns: 36px 1fr 90px; gap: 8px;
+      padding: 9px 4px; border-bottom: 1px solid rgba(255,255,255,.06);
+      font-size: 14px;
+    }
+    .row b { color: var(--cyan); font-family: Orbitron, sans-serif; font-weight: 700; }
+    .row span:last-child { text-align: right; font-family: Rajdhani, sans-serif; font-size: 18px; color: #fff; }
+    .me {
+      margin-top: 10px; padding: 10px 8px;
+      border: 1px dashed rgba(255,46,200,.5); background: rgba(255,46,200,.08);
+    }
+    .me small { display: block; color: var(--magenta); letter-spacing: .18em; font-size: 10px; margin-bottom: 4px; }
+    footer { margin-top: 28px; color: var(--muted); font-size: 12px; letter-spacing: .08em; }
+  </style>
+</head>
+<body>
+  <div class="scan"></div>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="brand">
+          <small>TYPING ARCADE // MVP</small>
+          <h1>NEON<span>TYPE</span></h1>
+        </div>
+        <p class="lead">
+          制限時間内に課題文を打ち続け、スコアとコンボを伸ばすタイピングゲーム。
+          長文は日本語をローマ字で、コーディングはよく使う 1 行をそのまま打つ。
+          1 文字でも間違えると 3 秒後にその文は最初からやり直し。
+        </p>
+        <div class="chip-row">
+          <span class="chip">NO MISS = PERFECT</span>
+          <span class="chip">COMBO x1.5 MAX</span>
+          <span class="chip">RANKING x4</span>
+        </div>
+      </div>
+      <a class="ghost" href="../index.html">比較一覧へ戻る</a>
+    </header>
+
+    <div class="layout">
+      <section>
+        <p class="sec-title">SELECT MODE</p>
+        <div class="modes">
+          <a class="mode" href="./play.html">
+            <div class="kicker">LONG TEXT</div>
+            <h2>長文モード</h2>
+            <p>30〜60文字の日本語をローマ字で打つ。日常会話や物語の一文。</p>
+            <div class="time">3:00</div>
+          </a>
+          <a class="mode" href="./play.html">
+            <div class="kicker">LONG TEXT</div>
+            <h2>長文モード</h2>
+            <p>同じルールで制限時間だけが長い。高スコア向き。</p>
+            <div class="time">5:00</div>
+          </a>
+          <a class="mode" href="./play.html">
+            <div class="kicker">CODING</div>
+            <h2>コーディング</h2>
+            <p>HTML / CSS / JS / Java / C# / C++ の頻出 1 行。空白も入力。</p>
+            <div class="time">3:00</div>
+          </a>
+          <a class="mode" href="./play.html">
+            <div class="kicker">CODING</div>
+            <h2>コーディング</h2>
+            <p>コード行を打ち続けてコンボを伸ばす 5 分戦。</p>
+            <div class="time">5:00</div>
+          </a>
+        </div>
+      </section>
+
+      <section class="rank">
+        <p class="sec-title">RANKING</p>
+        <div class="tabs">
+          <button class="tab on" data-board="l3">長文 3分</button>
+          <button class="tab" data-board="l5">長文 5分</button>
+          <button class="tab" data-board="c3">コード 3分</button>
+          <button class="tab" data-board="c5">コード 5分</button>
+        </div>
+        <div id="rows"></div>
+        <div class="me">
+          <small>OUT OF RANK</small>
+          <div class="row" style="border:0;padding:0">
+            <b>--</b><span>あなた（未プレイ）</span><span>0</span>
+          </div>
+        </div>
+      </section>
+    </div>
+    <footer>案A / サイバーパンク・アーケード — シアン × マゼンタ、濃紺ベース、グロー強め</footer>
+  </div>
+  <script>
+    const boards = {
+      l3: [
+        ["01","AKIRA",42800],["02","NEON",40120],["03","YUKI",38950],
+        ["04","KAI",36010],["05","RIO",34440],["06","HAL",32100],
+        ["07","MIO",30080],["08","ZEN",28880],["09","NOA",27110],["10","REN",25040]
+      ],
+      l5: [
+        ["01","NEON",70210],["02","AKIRA",68800],["03","HAL",65040],
+        ["04","YUKI",63330],["05","RIO",61020],["06","KAI",59000],
+        ["07","MIO",54010],["08","ZEN",52110],["09","NOA",49990],["10","REN",47000]
+      ],
+      c3: [
+        ["01","DEV",35500],["02","BYTE",34010],["03","NULL",32990],
+        ["04","CSS",30000],["05","JAVA",28880],["06","CPP",27010],
+        ["07","HTML",25550],["08","CS",24000],["09","JS",22110],["10","SQL",20040]
+      ],
+      c5: [
+        ["01","BYTE",61000],["02","DEV",59880],["03","NULL",57110],
+        ["04","JAVA",54000],["05","CPP",52020],["06","CSS",49990],
+        ["07","HTML",47010],["08","JS",45550],["09","CS",43000],["10","SQL",40110]
+      ]
+    };
+    const rows = document.getElementById("rows");
+    function render(key) {
+      rows.innerHTML = boards[key].map(([r,n,s]) =>
+        `<div class="row"><b>${r}</b><span>${n}</span><span>${s.toLocaleString()}</span></div>`
+      ).join("");
+    }
+    render("l3");
+    document.querySelectorAll(".tab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((b) => b.classList.remove("on"));
+        btn.classList.add("on");
+        render(btn.dataset.board);
+      });
+    });
+  </script>
+</body>
+</html>
