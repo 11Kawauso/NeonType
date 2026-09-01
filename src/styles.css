@@ -545,6 +545,7 @@ h1 span {
   right: 36px;
   bottom: 18%;
   transform: rotate(8deg);
+  transform-origin: center;
   text-align: center;
   pointer-events: none;
 }
@@ -571,6 +572,8 @@ h1 span {
   line-height: 0.9;
   color: #fff6d8;
   position: relative;
+  display: inline-block;
+  transform-origin: center;
   filter: drop-shadow(0 0 10px #ff7a18) drop-shadow(0 0 24px #ff2ec8);
 }
 
@@ -778,14 +781,12 @@ h1 span {
 }
 
 @keyframes grow {
-  0% {
-    transform: scale(1);
+  0%,
+  100% {
+    scale: 1;
   }
   40% {
-    transform: scale(1.22);
-  }
-  100% {
-    transform: scale(1);
+    scale: 1.22;
   }
 }
 
