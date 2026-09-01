@@ -11,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "neontype",
-      "database_id": "local-dev-placeholder",
+      "database_id": "67a0c0b8-c253-45e7-ac6b-4f30b1805b7d",
       "migrations_dir": "migrations",
     },
   ],

@@ -19,11 +19,11 @@ deploy:
 
 # ローカル D1 に migration を適用
 db-migrate:
-    vp exec wrangler d1 migrations apply neontype --local --yes
+    vp exec wrangler d1 migrations apply neontype --local
 
 # 本番 D1 に migration を適用
 db-migrate-prod:
-    vp exec wrangler d1 migrations apply neontype --remote --yes
+    vp exec wrangler d1 migrations apply neontype --remote
 
 # 問題データを SQL 化してローカル D1 へ投入
 db-seed:
