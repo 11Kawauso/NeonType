@@ -274,6 +274,10 @@ h1 span {
 .hud {
   position: relative;
   min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 72px 20px 24px;
 }
 
 .timer {
@@ -362,12 +366,10 @@ h1 span {
 }
 
 .stage {
-  position: absolute;
-  left: 50%;
-  top: 16%;
-  transform: translateX(-50%);
+  position: relative;
   width: min(920px, 92vw);
   text-align: center;
+  flex: 0 0 auto;
 }
 
 .source {
@@ -419,17 +421,20 @@ h1 span {
 }
 
 .kb-wrap {
-  position: absolute;
-  left: 50%;
-  bottom: 7%;
-  transform: translateX(-50%);
-  width: min(980px, 96vw);
+  position: relative;
+  width: max-content;
+  max-width: min(820px, 94vw);
+  margin-top: auto;
+  padding-top: 28px;
+  flex: 0 0 auto;
 }
 
 .kb {
   display: grid;
+  width: max-content;
+  max-width: 100%;
   gap: 6px;
-  padding: 16px;
+  padding: 12px 14px;
   background: rgba(8, 14, 36, 0.7);
   border: 1px solid rgba(0, 246, 255, 0.22);
   box-shadow:
