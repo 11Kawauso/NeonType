@@ -577,7 +577,7 @@ h1 span {
   filter: drop-shadow(0 0 10px #ff7a18) drop-shadow(0 0 24px #ff2ec8);
 }
 
-.combo-num.grow {
+.combo:has(.combo-num.grow) {
   animation: grow 0.28s ease;
 }
 
@@ -783,10 +783,10 @@ h1 span {
 @keyframes grow {
   0%,
   100% {
-    scale: 1;
+    transform: rotate(8deg) scale(1);
   }
   40% {
-    scale: 1.22;
+    transform: rotate(8deg) scale(1.22);
   }
 }
 
