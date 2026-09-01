@@ -143,6 +143,7 @@ describe("long-text romaji alternatives", () => {
     const wo = longProblem("wo", "を。", ["o", "."]);
     const n = longProblem("n", "ん。", ["n", "."]);
     const sokuon = longProblem("xtu", "った", ["t", "ta"]);
+    expect(visibleTyping(wo, createEngineState())).toBe("wo.");
     expect(typeAll(wo, "o.").events.at(-1)?.type).toBe("complete");
     expect(typeAll(wo, "wo.").events.at(-1)?.type).toBe("complete");
     expect(typeAll(n, "n.").events.at(-1)?.type).toBe("complete");
@@ -150,6 +151,69 @@ describe("long-text romaji alternatives", () => {
     expect(typeAll(n, "n'.").events.at(-1)?.type).toBe("complete");
     expect(typeAll(sokuon, "tta").events.at(-1)?.type).toBe("complete");
     expect(typeAll(sokuon, "xtuta").events.at(-1)?.type).toBe("complete");
+  });
+
+  it("shows wo for を and ha for は, while still accepting o and wa", () => {
+    const woha = longProblem("woha", "をは。", ["o", "wa", "."]);
+    expect(visibleTyping(woha, createEngineState())).toBe("woha.");
+    expect(typeAll(woha, "woha.").events.at(-1)?.type).toBe("complete");
+    expect(typeAll(woha, "owa.").events.at(-1)?.type).toBe("complete");
+
+    const afterO = handleKey(createEngineState(), woha, "o");
+    expect(afterO.type).toBe("correct");
+    if (afterO.type !== "correct") return;
+    expect(visibleTyping(woha, afterO.state).startsWith("oha")).toBe(true);
+
+    const afterWo = typeAll(woha, "wo");
+    const afterWa = handleKey(afterWo.state, woha, "w");
+    expect(afterWa.type).toBe("correct");
+    if (afterWa.type !== "correct") return;
+    const afterWaha = handleKey(afterWa.state, woha, "a");
+    expect(afterWaha.type).toBe("correct");
+    if (afterWaha.type !== "correct") return;
+    expect(visibleTyping(woha, afterWaha.state)).toBe("wowa.");
+  });
+
+  it("advances long text without typing spaces", () => {
+    const spaced = longProblem("spaced", "生涯を送", ["shou", "gai ", "o ", "oku"]);
+    expect(visibleTyping(spaced, createEngineState())).toBe("shougai wo oku");
+    const { events, state } = typeAll(spaced, "shougaiwooku");
+    expect(events.at(-1)?.type).toBe("complete");
+    expect(state.missCount).toBe(0);
+    expect(state.displayIndex).toBe(4);
+    expect(events.some((event) => event.type === "miss")).toBe(false);
+  });
+
+  it("ignores space in long mode and does not count a miss", () => {
+    const spaced = longProblem("space-ignore", "恥を。", ["haji ", "wo ", "."]);
+    const afterHaji = typeAll(spaced, "haji");
+    expect(afterHaji.events.at(-1)?.type).toBe("correct");
+    const space = handleKey(afterHaji.state, spaced, " ");
+    expect(space.type).toBe("ignore");
+    expect(afterHaji.state.missCount).toBe(0);
+    expect(handleKey(afterHaji.state, spaced, "w").type).toBe("correct");
+
+    const mid = handleKey(createEngineState(), spaced, " ");
+    expect(mid.type).toBe("ignore");
+  });
+
+  it("still requires spaces in coding mode", () => {
+    const withSpace: Problem = {
+      id: "c-space",
+      mode: "code",
+      source: "JSより",
+      displayText: "a b",
+      typingText: "a b",
+      segments: null,
+    };
+    const first = handleKey(createEngineState(), withSpace, "a");
+    expect(first.type).toBe("correct");
+    if (first.type !== "correct") return;
+    expect(handleKey(first.state, withSpace, "b").type).toBe("miss");
+    const space = handleKey(first.state, withSpace, " ");
+    expect(space.type).toBe("correct");
+    if (space.type !== "correct") return;
+    expect(handleKey(space.state, withSpace, "b").type).toBe("complete");
   });
 
   it("treats a wrong key as a miss", () => {
@@ -180,5 +244,28 @@ describe("long-text romaji alternatives", () => {
       }
     }
     expect(failed).toEqual([]);
+  });
+
+  it("completes every shipped long problem without typing spaces", () => {
+    const failed: string[] = [];
+    for (const problem of PROBLEMS.filter((item) => item.mode === "long")) {
+      const { events, state } = typeAll(problem, problem.typingText.replaceAll(" ", ""));
+      const last = events.at(-1);
+      if (last?.type !== "complete" || state.displayIndex !== [...problem.displayText].length) {
+        failed.push(problem.id);
+      }
+    }
+    expect(failed).toEqual([]);
+  });
+
+  it("shows wo and ha on the ningen-shikkaku passage", () => {
+    const problem = PROBLEMS.find((item) => item.id === "long-20");
+    expect(problem).toBeDefined();
+    if (!problem) return;
+    const visible = visibleTyping(problem, createEngineState());
+    expect(visible).toContain("shougai wo");
+    expect(visible).toContain("ni ha");
+    expect(visible).not.toContain("shougai o ");
+    expect(visible).not.toContain("ni wa");
   });
 });

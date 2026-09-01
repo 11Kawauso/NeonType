@@ -1,4 +1,4 @@
-import { progressFor } from "./romaji.ts";
+import { consumeDisplaySpaces, progressFor } from "./romaji.ts";
 import { applyGain, applyPenalty } from "./score.ts";
 import type { Problem } from "./types.ts";
 
@@ -47,15 +47,17 @@ export function resetProblemProgress(state: EngineState): EngineState {
 
 export function visibleTyping(problem: Problem, state: EngineState): string {
   if (problem.mode !== "long" || !problem.segments) return problem.typingText;
-  return progressFor(problem, state.typed)?.visible ?? problem.typingText;
+  const typed = consumeDisplaySpaces(problem, state.typed);
+  return progressFor(problem, typed)?.visible ?? problem.typingText;
 }
 
 export function expectedChar(problem: Problem, state: EngineState): string | null {
   if (problem.mode === "code" || !problem.segments) {
     return problem.typingText[state.typingIndex] ?? null;
   }
-  const visible = visibleTyping(problem, state);
-  return visible[state.typingIndex] ?? null;
+  const typed = consumeDisplaySpaces(problem, state.typed);
+  const visible = progressFor(problem, typed)?.visible ?? problem.typingText;
+  return visible[typed.length] ?? null;
 }
 
 function missEvent(state: EngineState, problem: Problem): KeyEvent {
@@ -138,10 +140,12 @@ function handleCodeKey(state: EngineState, problem: Problem, key: string): KeyEv
 
 function handleLongKey(state: EngineState, problem: Problem, key: string): KeyEvent {
   if (key.length !== 1) return { type: "ignore" };
-  const current = progressFor(problem, state.typed);
+  if (key === " ") return { type: "ignore" };
+  const prepared = consumeDisplaySpaces(problem, state.typed);
+  const current = progressFor(problem, prepared);
   if (current?.complete) return { type: "ignore" };
 
-  const typed = state.typed + key;
+  const typed = consumeDisplaySpaces(problem, prepared + key);
   const progress = progressFor(problem, typed);
   if (!progress) return missEvent(state, problem);
 

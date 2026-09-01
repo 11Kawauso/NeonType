@@ -407,8 +407,8 @@ function specialChunk(seg: Segment): Chunk | null {
     const trail = trailOf(typing, /^(wo|o)/);
     return chunkOf(
       1,
-      typing,
-      ["o", "wo"].map((s) => s + trail),
+      `wo${trail}`,
+      ["wo", "o"].map((s) => s + trail),
       oneSplit,
     );
   }
@@ -425,7 +425,7 @@ function specialChunk(seg: Segment): Chunk | null {
     const trail = trailOf(typing, /^(wa|ha)/);
     return chunkOf(
       1,
-      typing,
+      `ha${trail}`,
       ["ha", "wa"].map((s) => s + trail),
       oneSplit,
     );
@@ -627,4 +627,16 @@ export function progressFor(problem: Problem, typed: string): Progress | null {
     displayIndex: best.displayIndex,
     complete: best.chunkIndex >= chunks.length && best.current === null,
   };
+}
+
+export function consumeDisplaySpaces(problem: Problem, typed: string): string {
+  let current = typed;
+  while (true) {
+    const progress = progressFor(problem, current);
+    if (!progress || progress.complete) return current;
+    if (progress.visible[current.length] !== " ") return current;
+    const next = `${current} `;
+    if (!progressFor(problem, next)) return current;
+    current = next;
+  }
 }

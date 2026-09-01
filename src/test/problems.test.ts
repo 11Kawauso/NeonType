@@ -33,6 +33,27 @@ describe("problem data", () => {
     );
   });
 
+  it("uses wo for を and ha for は as canonical typing", () => {
+    const offenders: string[] = [];
+    for (const problem of PROBLEMS.filter((item) => item.mode === "long")) {
+      for (const segment of problem.segments ?? []) {
+        if (
+          (segment.display === "を" || segment.display === "ヲ") &&
+          !segment.typing.startsWith("wo")
+        ) {
+          offenders.push(`${problem.id}:${segment.display}:${segment.typing}`);
+        }
+        if (
+          (segment.display === "は" || segment.display === "ハ") &&
+          !segment.typing.startsWith("ha")
+        ) {
+          offenders.push(`${problem.id}:${segment.display}:${segment.typing}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
   it("keeps coding problems ASCII-only", () => {
     const offenders = PROBLEMS.filter(
       (p) =>
