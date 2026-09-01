@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { getAnonId } from "../lib/anon.ts";
-import { fetchRankings } from "../lib/api.ts";
+import { fetchRankings, saveDisplayName } from "../lib/api.ts";
+import {
+  DISPLAY_NAME_MAX,
+  getStoredDisplayName,
+  setStoredDisplayName,
+} from "../lib/display-name.ts";
 import type { Duration, Mode, RankingsResponse } from "../lib/types.ts";
 
 const BOARDS: { key: string; mode: Mode; duration: Duration; label: string }[] = [
@@ -17,6 +22,11 @@ type Props = {
 export function StartView({ onStart }: Props) {
   const [board, setBoard] = useState(BOARDS[0]!);
   const [rankings, setRankings] = useState<RankingsResponse>({ top: [], me: null });
+  const [rankTick, setRankTick] = useState(0);
+  const [nameDraft, setNameDraft] = useState(() => getStoredDisplayName());
+  const [nameMessage, setNameMessage] = useState<string | null>(null);
+  const [nameError, setNameError] = useState(false);
+  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -30,7 +40,26 @@ export function StartView({ onStart }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [board]);
+  }, [board, rankTick]);
+
+  async function onSaveName() {
+    if (savingName) return;
+    setSavingName(true);
+    setNameError(false);
+    setNameMessage(null);
+    try {
+      const saved = await saveDisplayName(getAnonId(), nameDraft);
+      setStoredDisplayName(saved);
+      setNameDraft(saved);
+      setNameMessage("表示名を保存しました");
+      setRankTick((tick) => tick + 1);
+    } catch {
+      setNameError(true);
+      setNameMessage("保存に失敗しました");
+    } finally {
+      setSavingName(false);
+    }
+  }
 
   return (
     <div className="wrap">
@@ -53,6 +82,29 @@ export function StartView({ onStart }: Props) {
             <span className="chip">RANKING x4</span>
           </div>
         </div>
+        <aside className="name-panel">
+          <p className="sec-title">PLAYER NAME</p>
+          <input
+            className="name-input"
+            maxLength={DISPLAY_NAME_MAX}
+            placeholder="未入力はゲスト"
+            value={nameDraft}
+            disabled={savingName}
+            onChange={(event) => setNameDraft(event.target.value)}
+          />
+          <button
+            className="primary"
+            type="button"
+            disabled={savingName}
+            onClick={() => void onSaveName()}
+          >
+            保存
+          </button>
+          <p className="hint">
+            このブラウザの表示名です。変更すると登録済みのランキング名もすべて更新されます。
+          </p>
+          {nameMessage ? <p className={nameError ? "error" : "status"}>{nameMessage}</p> : null}
+        </aside>
       </header>
       <div className="layout">
         <section>

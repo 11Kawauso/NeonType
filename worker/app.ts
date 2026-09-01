@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { parseDisplayName } from "../src/lib/display-name.ts";
 import type { Env } from "./env.ts";
 
 const MODES = new Set(["long", "code"]);
@@ -10,12 +11,6 @@ function isMode(value: string | undefined): value is "long" | "code" {
 
 function isDuration(value: number): value is 180 | 300 {
   return DURATIONS.has(value);
-}
-
-function clampName(raw: unknown): string {
-  const trimmed = typeof raw === "string" ? raw.trim() : "";
-  const name = trimmed.length === 0 ? "ゲスト" : trimmed;
-  return [...name].slice(0, 12).join("");
 }
 
 function isNonNegInt(value: unknown): value is number {
@@ -80,7 +75,6 @@ export function createApp() {
     const id = c.req.param("id");
     const body = await c.req.json<Record<string, unknown>>();
     const anonId = typeof body.anonId === "string" ? body.anonId : "";
-    const name = clampName(body.name);
     const row = await c.env.DB.prepare(
       "SELECT id, anon_id, registered_at FROM results WHERE id = ?",
     )
@@ -89,11 +83,44 @@ export function createApp() {
     if (!row) return c.json({ error: "not found" }, 404);
     if (row.anon_id !== anonId) return c.json({ error: "forbidden" }, 403);
     if (row.registered_at) return c.json({ error: "already registered" }, 409);
+
+    const existing = await c.env.DB.prepare(
+      `SELECT name FROM results
+        WHERE anon_id = ? AND registered_at IS NOT NULL
+        ORDER BY registered_at DESC
+        LIMIT 1`,
+    )
+      .bind(anonId)
+      .first<{ name: string }>();
+
+    let name: string;
+    if (existing?.name) {
+      name = existing.name;
+    } else {
+      const parsed = parseDisplayName(body.name);
+      if (!parsed.ok) return c.json({ error: "invalid name" }, 400);
+      name = parsed.name;
+    }
+
     const registeredAt = new Date().toISOString();
     await c.env.DB.prepare("UPDATE results SET name = ?, registered_at = ? WHERE id = ?")
       .bind(name, registeredAt, id)
       .run();
     return c.json({ ok: true, name });
+  });
+
+  app.put("/api/name", async (c) => {
+    const body = await c.req.json<Record<string, unknown>>();
+    const anonId = typeof body.anonId === "string" ? body.anonId : "";
+    if (!anonId) return c.json({ error: "invalid body" }, 400);
+    const parsed = parseDisplayName(body.name);
+    if (!parsed.ok) return c.json({ error: "invalid name" }, 400);
+    const updated = await c.env.DB.prepare(
+      "UPDATE results SET name = ? WHERE anon_id = ? AND registered_at IS NOT NULL",
+    )
+      .bind(parsed.name, anonId)
+      .run();
+    return c.json({ name: parsed.name, updated: updated.meta.changes ?? 0 });
   });
 
   app.get("/api/rankings", async (c) => {

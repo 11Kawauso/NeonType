@@ -66,10 +66,10 @@ body::before {
 }
 
 header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 20px;
+  align-items: start;
 }
 
 .brand small {
@@ -202,6 +202,42 @@ h1 span {
   color: var(--magenta);
   font-size: 22px;
   text-shadow: 0 0 12px rgba(255, 46, 200, 0.6);
+}
+
+.name-panel {
+  background: var(--panel);
+  border: 1px solid rgba(0, 246, 255, 0.28);
+  padding: 16px 18px 18px;
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 1px rgba(255, 46, 200, 0.08),
+    0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.name-panel .sec-title {
+  margin-bottom: 12px;
+}
+
+.name-panel .name-input {
+  margin: 0 0 10px;
+}
+
+.name-panel .primary {
+  width: 100%;
+}
+
+.name-panel .hint {
+  margin: 10px 0 0;
+}
+
+.name-panel .status,
+.name-panel .error {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+
+.name-panel .status {
+  color: var(--cyan);
 }
 
 .rank {
@@ -650,6 +686,33 @@ h1 span {
   font-size: 16px;
 }
 
+.name-input:focus {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: 0 0 12px rgba(0, 246, 255, 0.25);
+}
+
+.register-name {
+  margin: 18px 0 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.register-name b {
+  margin-left: 8px;
+  color: var(--cyan);
+  font-family: Rajdhani, sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+}
+
+.hint {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .actions {
   display: flex;
   gap: 12px;
@@ -665,6 +728,12 @@ h1 span {
 .primary {
   background: var(--cyan);
   color: #041018;
+}
+
+.primary:disabled,
+.ghost:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .ghost {
@@ -727,6 +796,7 @@ h1 span {
 }
 
 @media (max-width: 900px) {
+  header,
   .layout {
     grid-template-columns: 1fr;
   }

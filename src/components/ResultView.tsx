@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { getAnonId } from "../lib/anon.ts";
 import { registerResult } from "../lib/api.ts";
+import { getDisplayName } from "../lib/display-name.ts";
 import { inputCount, ratePercent } from "../lib/score.ts";
 import type { Duration, Mode, PlayStats } from "../lib/types.ts";
 
@@ -13,15 +14,15 @@ type Props = {
 };
 
 export function ResultView({ mode, duration, stats, resultId, onBack }: Props) {
-  const [name, setName] = useState("");
   const [registered, setRegistered] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const displayName = getDisplayName();
   const total = inputCount(stats);
 
   async function onRegister() {
     if (!resultId || registered) return;
     try {
-      const saved = await registerResult(resultId, getAnonId(), name);
+      const saved = await registerResult(resultId, getAnonId(), displayName);
       setRegistered(true);
       setMessage(`${saved} で登録しました`);
     } catch {
@@ -71,14 +72,10 @@ export function ResultView({ mode, duration, stats, resultId, onBack }: Props) {
           <span>誤タイプ率</span>
           <b>{ratePercent(stats.missCount, total).toFixed(1)}%</b>
         </div>
-        <input
-          className="name-input"
-          maxLength={12}
-          placeholder="名前（未入力はゲスト）"
-          value={name}
-          disabled={registered || !resultId}
-          onChange={(event) => setName(event.target.value)}
-        />
+        <p className="register-name">
+          表示名 <b>{displayName}</b>
+        </p>
+        <p className="hint">名前の変更はスタート画面で行えます。</p>
         <div className="actions">
           <button
             className="primary"

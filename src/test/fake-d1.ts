@@ -55,6 +55,15 @@ export function createFakeDb(problems: ProblemRow[] = [], results: ResultRow[] =
               if (sql.includes("FROM results WHERE id = ?")) {
                 return results.find((row) => row.id === params[0]) ?? null;
               }
+              if (
+                sql.includes("WHERE anon_id = ? AND registered_at IS NOT NULL") &&
+                sql.includes("ORDER BY registered_at DESC")
+              ) {
+                const matches = results
+                  .filter((row) => row.anon_id === params[0] && row.registered_at)
+                  .toSorted((a, b) => (b.registered_at ?? "").localeCompare(a.registered_at ?? ""));
+                return matches[0] ?? null;
+              }
               if (sql.includes("anon_id = ?")) {
                 const matches = results
                   .filter(
@@ -88,15 +97,27 @@ export function createFakeDb(problems: ProblemRow[] = [], results: ResultRow[] =
                   registered_at: null,
                   created_at: String(params[9]),
                 });
+                return { success: true, meta: { changes: 1 } };
+              }
+              if (sql.includes("UPDATE results SET name = ? WHERE anon_id")) {
+                let changes = 0;
+                for (const row of results) {
+                  if (row.anon_id === params[1] && row.registered_at) {
+                    row.name = String(params[0]);
+                    changes += 1;
+                  }
+                }
+                return { success: true, meta: { changes } };
               }
               if (sql.includes("UPDATE results SET name")) {
                 const row = results.find((item) => item.id === params[2]);
                 if (row) {
                   row.name = String(params[0]);
                   row.registered_at = String(params[1]);
+                  return { success: true, meta: { changes: 1 } };
                 }
               }
-              return { success: true };
+              return { success: true, meta: { changes: 0 } };
             },
           };
         },

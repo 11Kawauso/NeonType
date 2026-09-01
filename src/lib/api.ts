@@ -64,3 +64,14 @@ export async function registerResult(id: string, anonId: string, name: string): 
   const data = (await res.json()) as { name: string };
   return data.name;
 }
+
+export async function saveDisplayName(anonId: string, name: string): Promise<string> {
+  const res = await fetch("/api/name", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ anonId, name }),
+  });
+  if (!res.ok) throw new Error("名前の保存に失敗しました");
+  const data = (await res.json()) as { name: string };
+  return data.name;
+}
