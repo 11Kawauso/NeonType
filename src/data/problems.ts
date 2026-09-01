@@ -1283,7 +1283,7 @@ const CODE_PROBLEMS: Problem[] = [
   code("code-java-05", "Javaより", 'System.out.println("score=" + score);'),
   code("code-cs-01", "C#より", "public static async Task<int> Main(string[] args)"),
   code("code-cs-02", "C#より", "var scores = items.Select(x => x.Score).ToList();"),
-  code("code-cs-03", "C#より", 'if (name is null or "") return "ゲスト";'),
+  code("code-cs-03", "C#より", 'if (string.IsNullOrEmpty(name)) return "Guest";'),
   code("code-cs-04", "C#より", "await using var conn = await factory.OpenAsync();"),
   code("code-cs-05", "C#より", 'Console.WriteLine($"combo={combo}");'),
   code("code-cpp-01", "C++より", "int main(int argc, char* argv[]) {"),

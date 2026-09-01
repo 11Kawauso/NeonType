@@ -32,4 +32,13 @@ describe("problem data", () => {
       new Set(["HTMLより", "CSSより", "JavaScriptより", "Javaより", "C#より", "C++より"]),
     );
   });
+
+  it("keeps coding problems ASCII-only", () => {
+    const offenders = PROBLEMS.filter(
+      (p) =>
+        p.mode === "code" &&
+        [...`${p.displayText}${p.typingText}`].some((ch) => ch.charCodeAt(0) > 127),
+    );
+    expect(offenders.map((p) => p.id)).toEqual([]);
+  });
 });

@@ -52,7 +52,7 @@ INSERT INTO problems (id, mode, source, display_text, typing_text, segments) VAL
 ('code-java-05', 'code', 'Javaより', 'System.out.println("score=" + score);', 'System.out.println("score=" + score);', NULL),
 ('code-cs-01', 'code', 'C#より', 'public static async Task<int> Main(string[] args)', 'public static async Task<int> Main(string[] args)', NULL),
 ('code-cs-02', 'code', 'C#より', 'var scores = items.Select(x => x.Score).ToList();', 'var scores = items.Select(x => x.Score).ToList();', NULL),
-('code-cs-03', 'code', 'C#より', 'if (name is null or "") return "ゲスト";', 'if (name is null or "") return "ゲスト";', NULL),
+('code-cs-03', 'code', 'C#より', 'if (string.IsNullOrEmpty(name)) return "Guest";', 'if (string.IsNullOrEmpty(name)) return "Guest";', NULL),
 ('code-cs-04', 'code', 'C#より', 'await using var conn = await factory.OpenAsync();', 'await using var conn = await factory.OpenAsync();', NULL),
 ('code-cs-05', 'code', 'C#より', 'Console.WriteLine($"combo={combo}");', 'Console.WriteLine($"combo={combo}");', NULL),
 ('code-cpp-01', 'code', 'C++より', 'int main(int argc, char* argv[]) {', 'int main(int argc, char* argv[]) {', NULL),
