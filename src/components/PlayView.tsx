@@ -5,6 +5,7 @@ import {
   createEngineState,
   handleKey,
   resetProblemProgress,
+  visibleTyping,
   type EngineState,
 } from "../lib/engine.ts";
 import { pickNextId } from "../lib/picker.ts";
@@ -219,7 +220,11 @@ export function PlayView({ mode, duration, onFinish }: Props) {
           {mode === "long" ? (
             <>
               <Chars text={problem.displayText} index={engine.displayIndex} className="jp" />
-              <Chars text={problem.typingText} index={engine.typingIndex} className="roma" />
+              <Chars
+                text={visibleTyping(problem, engine)}
+                index={engine.typingIndex}
+                className="roma"
+              />
             </>
           ) : (
             <Chars text={problem.displayText} index={engine.displayIndex} className="code-line" />
