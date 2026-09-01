@@ -273,6 +273,31 @@ function kanaSpellings(kana: string): string[] {
   return KANA_SPELLINGS.get(kana) ?? [kana];
 }
 
+const HIRAGANA = /^[\u3040-\u309F]+$/u;
+const KANJI = /\p{Script=Han}/u;
+
+export function isKanji(ch: string): boolean {
+  return KANJI.test(ch);
+}
+
+function tokenHiragana(token: Token): string {
+  if (token.kind === "kana") return token.kana;
+  if (token.kind === "sokuon") return "っ";
+  if (token.kind === "n") return "ん";
+  if (/^[\s.,!?'"\-:;()[\]/\\。、]+$/.test(token.text)) return "";
+  return token.text;
+}
+
+export function typingToHiragana(typing: string): string {
+  return tokenize(typing.toLowerCase()).map(tokenHiragana).join("");
+}
+
+export function furiganaOf(segment: Segment): string | null {
+  if (!isKanji(segment.display)) return null;
+  const reading = segment.reading?.trim() ? segment.reading : typingToHiragana(segment.typing);
+  return HIRAGANA.test(reading) ? reading : null;
+}
+
 function tokenize(input: string): Token[] {
   const tokens: Token[] = [];
   let i = 0;

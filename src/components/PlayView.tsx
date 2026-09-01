@@ -9,7 +9,8 @@ import {
   type EngineState,
 } from "../lib/engine.ts";
 import { pickNextId } from "../lib/picker.ts";
-import type { Duration, Mode, PlayStats, Problem } from "../lib/types.ts";
+import { furiganaOf } from "../lib/romaji.ts";
+import type { Duration, Mode, PlayStats, Problem, Segment } from "../lib/types.ts";
 import { Keyboard } from "./Keyboard.tsx";
 
 type Props = {
@@ -24,14 +25,41 @@ function formatTime(sec: number): string {
   return `${m}:${s}`;
 }
 
+function chClass(index: number, current: number): string {
+  if (index < current) return "ch done";
+  if (index === current) return "ch cur";
+  return "ch";
+}
+
 function Chars({ text, index, className }: { text: string; index: number; className: string }) {
   return (
     <div className={className}>
-      {[...text].map((ch, i) => {
-        const cls = i < index ? "ch done" : i === index ? "ch cur" : "ch";
+      {[...text].map((ch, i) => (
+        <span key={`${i}-${ch}`} className={chClass(i, index)}>
+          {ch === " " ? "\u00a0" : ch}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function JapaneseChars({ segments, index }: { segments: Segment[]; index: number }) {
+  return (
+    <div className="jp">
+      {segments.map((seg, i) => {
+        const cls = chClass(i, index);
+        const furi = furiganaOf(seg);
+        if (furi) {
+          return (
+            <ruby key={`${i}-${seg.display}`} className={cls}>
+              {seg.display}
+              <rt>{furi}</rt>
+            </ruby>
+          );
+        }
         return (
-          <span key={`${i}-${ch}`} className={cls}>
-            {ch === " " ? "\u00a0" : ch}
+          <span key={`${i}-${seg.display}`} className={cls}>
+            {seg.display === " " ? "\u00a0" : seg.display}
           </span>
         );
       })}
@@ -219,7 +247,11 @@ export function PlayView({ mode, duration, onFinish }: Props) {
           <div className="source">{problem.source}</div>
           {mode === "long" ? (
             <>
-              <Chars text={problem.displayText} index={engine.displayIndex} className="jp" />
+              {problem.segments ? (
+                <JapaneseChars segments={problem.segments} index={engine.displayIndex} />
+              ) : (
+                <Chars text={problem.displayText} index={engine.displayIndex} className="jp" />
+              )}
               <Chars
                 text={visibleTyping(problem, engine)}
                 index={engine.typingIndex}

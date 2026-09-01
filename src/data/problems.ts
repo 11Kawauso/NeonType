@@ -1,3 +1,4 @@
+import { isKanji, typingToHiragana } from "../lib/romaji.ts";
 import type { Problem, Segment } from "../lib/types.ts";
 
 function canonicalRomaji(displayChar: string, typing: string): string {
@@ -16,10 +17,17 @@ function long(id: string, source: string, display: string, parts: string[]): Pro
   if (chars.length !== parts.length) {
     throw new Error(`${id}: display ${chars.length} chars != ${parts.length} parts`);
   }
-  const segments: Segment[] = chars.map((displayChar, index) => ({
-    display: displayChar,
-    typing: canonicalRomaji(displayChar, parts[index]!),
-  }));
+  const segments: Segment[] = chars.map((displayChar, index) => {
+    const typing = canonicalRomaji(displayChar, parts[index]!);
+    if (!isKanji(displayChar)) {
+      return { display: displayChar, typing, reading: null };
+    }
+    const reading = typingToHiragana(typing);
+    if (!/^[\u3040-\u309F]+$/u.test(reading)) {
+      throw new Error(`${id}: ${displayChar} (${typing}) -> ${reading} is not hiragana`);
+    }
+    return { display: displayChar, typing, reading };
+  });
   return {
     id,
     mode: "long",
@@ -410,7 +418,7 @@ const LONG_PROBLEMS: Problem[] = [
       "me ",
       "no ",
       "shin",
-      "go ",
+      "gou ",
       "wo ",
       "migi ",
       "ni ",
@@ -431,8 +439,8 @@ const LONG_PROBLEMS: Problem[] = [
     "日常会話より",
     "明日までに宿題を終わらせてから、友達と遊ぶ約束をしていますよ。",
     [
-      "ashi",
-      "ta ",
+      "a",
+      "shita ",
       "ma",
       "de ",
       "ni ",
@@ -1116,8 +1124,8 @@ const LONG_PROBLEMS: Problem[] = [
       "ru",
       ". ",
       "shou",
-      "gaku",
-      "kou ",
+      "ga",
+      "kkou ",
       "no ",
       "ni",
       "kai ",

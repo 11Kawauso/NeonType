@@ -4,6 +4,8 @@ export type Duration = 180 | 300;
 export type Segment = {
   display: string;
   typing: string;
+  /** 漢字のみ。その文でのひらがな読み。かな・記号は持たない。 */
+  reading?: string | null;
 };
 
 export type Problem = {
