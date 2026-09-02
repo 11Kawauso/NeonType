@@ -328,7 +328,6 @@ body:has(.hud),
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: var(--play-gap);
   padding: clamp(56px, 8.2dvh, 72px) 16px clamp(8px, 1.6dvh, 18px);
 }
@@ -422,12 +421,18 @@ body:has(.hud),
   position: relative;
   width: min(920px, 92vw);
   text-align: center;
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
 }
 
 .source {
   display: inline-block;
-  margin-bottom: clamp(8px, 1.5dvh, 16px);
+  margin-bottom: clamp(6px, min(1.5dvh, 2.8cqh), 16px);
   padding: 4px 12px;
   border: 1px solid rgba(0, 246, 255, 0.35);
   color: var(--cyan);
@@ -444,10 +449,10 @@ body:has(.hud),
 }
 
 .jp {
-  font-size: clamp(22px, 2.6dvh + 0.7vw, 36px);
+  font-size: clamp(16px, min(2.6dvh + 0.7vw, 10cqh), 36px);
   font-weight: 700;
-  line-height: clamp(2.08, 1.72 + 0.055dvh, 2.35);
-  padding-top: clamp(0.55em, 1.1dvh, 0.7em);
+  line-height: clamp(1.9, min(1.72 + 0.055dvh, 2.05), 2.35);
+  padding-top: clamp(0.4em, min(1.1dvh, 2.5cqh), 0.7em);
 }
 
 .jp ruby {
@@ -479,9 +484,9 @@ body:has(.hud),
 
 .roma,
 .code-line {
-  margin-top: clamp(8px, 1.5dvh, 16px);
+  margin-top: clamp(6px, min(1.5dvh, 2.5cqh), 16px);
   font-family: Rajdhani, monospace;
-  font-size: clamp(15px, 2dvh + 0.45vw, 26px);
+  font-size: clamp(13px, min(2dvh + 0.45vw, 6.5cqh), 26px);
   letter-spacing: 0.04em;
 }
 
