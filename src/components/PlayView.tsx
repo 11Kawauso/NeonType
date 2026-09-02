@@ -12,6 +12,7 @@ import {
 import { pickNextId } from "../lib/picker.ts";
 import { furiganaOf } from "../lib/romaji.ts";
 import type { Duration, Mode, PlayStats, Problem, Segment } from "../lib/types.ts";
+import { acceptTypingKeydown, releaseTypingKey } from "../lib/held-keys.ts";
 import { Keyboard } from "./Keyboard.tsx";
 
 type Props = {
@@ -86,6 +87,7 @@ export function PlayView({ mode, duration, onFinish }: Props) {
   const problemRef = useRef<Problem | null>(null);
   const lastId = useRef<string | null>(null);
   const deltaId = useRef(0);
+  const heldKeys = useRef(new Set<string>());
 
   engineRef.current = engine;
   problemRef.current = problem;
@@ -168,10 +170,11 @@ export function PlayView({ mode, duration, onFinish }: Props) {
   }
 
   useEffect(() => {
-    function onKey(event: KeyboardEvent) {
-      if (finished.current || missing) return;
+    function onKeyDown(event: KeyboardEvent) {
       if (event.key.length !== 1) return;
       event.preventDefault();
+      if (!acceptTypingKeydown(event, heldKeys.current)) return;
+      if (finished.current || missing) return;
       const current = problemRef.current;
       if (!current) return;
       setLit(event.key);
@@ -206,8 +209,15 @@ export function PlayView({ mode, duration, onFinish }: Props) {
         if (ids.length > 0) nextProblem(problems, lastId.current);
       }
     }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    function onKeyUp(event: KeyboardEvent) {
+      releaseTypingKey(event, heldKeys.current);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
   }, [missing, problems, ids.length]);
 
   if (loadError) {
