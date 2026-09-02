@@ -10,6 +10,17 @@ import {
   type EngineState,
 } from "../lib/engine.ts";
 import { pickNextId } from "../lib/picker.ts";
+import {
+  applyStartKey,
+  initialPlayPhase,
+  RING_LENGTH,
+  ringCountdown,
+  shouldJudgeTyping,
+  shouldRunTimer,
+  showStartHint,
+  START_HINT,
+  type PlayPhase,
+} from "../lib/play-phase.ts";
 import { furiganaOf } from "../lib/romaji.ts";
 import type { Duration, Mode, PlayStats, Problem, Segment } from "../lib/types.ts";
 import { acceptTypingKeydown, releaseTypingKey } from "../lib/held-keys.ts";
@@ -45,6 +56,35 @@ function Chars({ text, index, className }: { text: string; index: number; classN
   );
 }
 
+function CountRing({ offset, count, neon }: { offset: number; count: number; neon?: boolean }) {
+  return (
+    <div className="ring-wrap">
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        <circle
+          cx="110"
+          cy="110"
+          r="96"
+          stroke={neon ? "rgba(0,246,255,.22)" : "rgba(255,255,255,.15)"}
+          strokeWidth="10"
+          fill="none"
+        />
+        <circle
+          cx="110"
+          cy="110"
+          r="96"
+          stroke={neon ? "#00f6ff" : "#fff"}
+          strokeWidth="10"
+          fill="none"
+          strokeDasharray={RING_LENGTH}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className="count">{count}</div>
+    </div>
+  );
+}
+
 function JapaneseChars({ segments, index }: { segments: Segment[]; index: number }) {
   return (
     <div className="jp">
@@ -74,6 +114,9 @@ export function PlayView({ mode, duration, onFinish }: Props) {
   const [problem, setProblem] = useState<Problem | null>(null);
   const [engine, setEngine] = useState<EngineState>(createEngineState);
   const [remain, setRemain] = useState<number>(duration);
+  const [phase, setPhase] = useState<PlayPhase>(initialPlayPhase);
+  const [readyCount, setReadyCount] = useState(3);
+  const [readyOffset, setReadyOffset] = useState(0);
   const [missing, setMissing] = useState(false);
   const [missCount, setMissCount] = useState(3);
   const [missOffset, setMissOffset] = useState(0);
@@ -88,6 +131,8 @@ export function PlayView({ mode, duration, onFinish }: Props) {
   const lastId = useRef<string | null>(null);
   const deltaId = useRef(0);
   const heldKeys = useRef(new Set<string>());
+  const phaseRef = useRef(phase);
+  const rafRef = useRef(0);
 
   engineRef.current = engine;
   problemRef.current = problem;
@@ -131,7 +176,38 @@ export function PlayView({ mode, duration, onFinish }: Props) {
     };
   }, [mode]);
 
+  useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
+
+  function runRing(onFrame: (frame: ReturnType<typeof ringCountdown>) => void, onDone: () => void) {
+    const started = performance.now();
+    const tick = (now: number) => {
+      if (finished.current) return;
+      const frame = ringCountdown(now - started);
+      onFrame(frame);
+      if (!frame.done) rafRef.current = requestAnimationFrame(tick);
+      else onDone();
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }
+
+  function startReadyCountdown() {
+    setPhase("countdown");
+    setReadyCount(3);
+    setReadyOffset(0);
+    runRing(
+      (frame) => {
+        setReadyOffset(frame.offset);
+        setReadyCount(frame.count);
+      },
+      () => {
+        phaseRef.current = "playing";
+        setPhase("playing");
+      },
+    );
+  }
+
   useEffect(() => {
+    if (!shouldRunTimer(phase)) return;
     const timer = window.setInterval(() => {
       if (finished.current) return;
       setRemain((prev) => {
@@ -143,7 +219,7 @@ export function PlayView({ mode, duration, onFinish }: Props) {
       });
     }, 1000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [phase]);
 
   async function endPlay() {
     if (finished.current) return;
@@ -174,7 +250,14 @@ export function PlayView({ mode, duration, onFinish }: Props) {
       if (event.key.length !== 1) return;
       event.preventDefault();
       if (!acceptTypingKeydown(event, heldKeys.current)) return;
-      if (finished.current || missing) return;
+      if (finished.current) return;
+      const nextPhase = applyStartKey(phaseRef.current, event.key);
+      if (nextPhase !== phaseRef.current) {
+        phaseRef.current = nextPhase;
+        startReadyCountdown();
+        return;
+      }
+      if (!shouldJudgeTyping(phaseRef.current) || missing) return;
       const current = problemRef.current;
       if (!current) return;
       setLit(event.key);
@@ -187,16 +270,13 @@ export function PlayView({ mode, duration, onFinish }: Props) {
         setMissing(true);
         setMissCount(3);
         setMissOffset(0);
-        const started = performance.now();
-        const tick = (now: number) => {
-          const t = Math.min(1, (now - started) / 3000);
-          setMissOffset(603 * t);
-          const left = 3 - Math.floor(t * 3);
-          setMissCount(left > 0 ? left : 1);
-          if (t < 1) requestAnimationFrame(tick);
-          else setMissing(false);
-        };
-        requestAnimationFrame(tick);
+        runRing(
+          (frame) => {
+            setMissOffset(frame.offset);
+            setMissCount(frame.count);
+          },
+          () => setMissing(false),
+        );
         return;
       }
       if (result.type === "complete") {
@@ -253,27 +333,30 @@ export function PlayView({ mode, duration, onFinish }: Props) {
         </div>
       </div>
 
-      {problem ? (
-        <div className="stage">
-          <div className="source">{problem.source}</div>
-          {mode === "long" ? (
-            <>
-              {problem.segments ? (
-                <JapaneseChars segments={problem.segments} index={engine.displayIndex} />
-              ) : (
-                <Chars text={problem.displayText} index={engine.displayIndex} className="jp" />
-              )}
-              <Chars
-                text={visibleTyping(problem, engine)}
-                index={engine.typingIndex}
-                className="roma"
-              />
-            </>
-          ) : (
-            <Chars text={problem.displayText} index={engine.displayIndex} className="code-line" />
-          )}
-        </div>
-      ) : null}
+      <div className="stage">
+        {problem ? (
+          <>
+            <div className="source">{problem.source}</div>
+            {mode === "long" ? (
+              <>
+                {problem.segments ? (
+                  <JapaneseChars segments={problem.segments} index={engine.displayIndex} />
+                ) : (
+                  <Chars text={problem.displayText} index={engine.displayIndex} className="jp" />
+                )}
+                <Chars
+                  text={visibleTyping(problem, engine)}
+                  index={engine.typingIndex}
+                  className="roma"
+                />
+              </>
+            ) : (
+              <Chars text={problem.displayText} index={engine.displayIndex} className="code-line" />
+            )}
+          </>
+        ) : null}
+        {showStartHint(phase) ? <p className="start-hint">{START_HINT}</p> : null}
+      </div>
 
       <div className="combo">
         {perfect ? <div className="perfect">Perfect!</div> : null}
@@ -292,30 +375,10 @@ export function PlayView({ mode, duration, onFinish }: Props) {
       <Keyboard lit={lit} next={problem ? expectedChar(problem, engine) : null} />
 
       <div className={missing ? "miss show" : "miss"}>
-        <div className="ring-wrap">
-          <svg width="220" height="220" viewBox="0 0 220 220">
-            <circle
-              cx="110"
-              cy="110"
-              r="96"
-              stroke="rgba(255,255,255,.15)"
-              strokeWidth="10"
-              fill="none"
-            />
-            <circle
-              cx="110"
-              cy="110"
-              r="96"
-              stroke="#fff"
-              strokeWidth="10"
-              fill="none"
-              strokeDasharray="603"
-              strokeDashoffset={missOffset}
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="count">{missCount}</div>
-        </div>
+        <CountRing offset={missOffset} count={missCount} />
+      </div>
+      <div className={phase === "countdown" ? "ready show" : "ready"}>
+        <CountRing offset={readyOffset} count={readyCount} neon />
       </div>
     </div>
   );
