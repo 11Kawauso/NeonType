@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import { PROBLEMS } from "../data/problems.ts";
-import { createEngineState, handleKey, visibleTyping } from "../lib/engine.ts";
+import { createEngineState, expectedChar, handleKey, visibleTyping } from "../lib/engine.ts";
 import type { Problem } from "../lib/types.ts";
 
 const long: Problem = {
@@ -267,5 +267,39 @@ describe("long-text romaji alternatives", () => {
     expect(visible).toContain("ni ha");
     expect(visible).not.toContain("shougai o ");
     expect(visible).not.toContain("ni wa");
+  });
+
+  it("reports the currently displayed next key", () => {
+    const merosu = PROBLEMS.find((item) => item.id === "long-29");
+    expect(merosu).toBeDefined();
+    if (!merosu) return;
+    const start = createEngineState();
+    expect(expectedChar(merosu, start)).toBe("m");
+    const afterM = handleKey(start, merosu, "m");
+    expect(afterM.type).toBe("correct");
+    if (afterM.type !== "correct") return;
+    expect(expectedChar(merosu, afterM.state)).toBe("e");
+
+    const afterH = handleKey(createEngineState(), futari, "h");
+    expect(afterH.type).toBe("correct");
+    if (afterH.type !== "correct") return;
+    expect(expectedChar(futari, afterH.state)).toBe("u");
+
+    const wo = longProblem("wo-next", "を。", ["o", "."]);
+    expect(expectedChar(wo, createEngineState())).toBe("w");
+
+    const spaced: Problem = {
+      id: "c-space-next",
+      mode: "code",
+      source: "JSより",
+      displayText: "a b",
+      typingText: "a b",
+      segments: null,
+    };
+    const first = handleKey(createEngineState(), spaced, "a");
+    expect(first.type).toBe("correct");
+    if (first.type !== "correct") return;
+    expect(expectedChar(spaced, first.state)).toBe(" ");
+    expect(expectedChar(code, createEngineState())).toBe("a");
   });
 });

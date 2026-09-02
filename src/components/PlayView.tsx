@@ -3,6 +3,7 @@ import { getAnonId } from "../lib/anon.ts";
 import { fetchProblems, saveResult } from "../lib/api.ts";
 import {
   createEngineState,
+  expectedChar,
   handleKey,
   resetProblemProgress,
   visibleTyping,
@@ -278,7 +279,7 @@ export function PlayView({ mode, duration, onFinish }: Props) {
         ) : null}
       </div>
 
-      <Keyboard lit={lit} />
+      <Keyboard lit={lit} next={problem ? expectedChar(problem, engine) : null} />
 
       <div className={missing ? "miss show" : "miss"}>
         <div className="ring-wrap">
