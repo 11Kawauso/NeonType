@@ -17,6 +17,7 @@ import {
   ringCountdown,
   shouldJudgeTyping,
   shouldRunTimer,
+  showProblemText,
   showStartHint,
   START_HINT,
   type PlayPhase,
@@ -94,7 +95,7 @@ function JapaneseChars({ segments, index }: { segments: Segment[]; index: number
         if (furi) {
           return (
             <ruby key={`${i}-${seg.display}`} className={cls}>
-              {seg.display}
+              <span className="rb">{seg.display}</span>
               <rt>{furi}</rt>
             </ruby>
           );
@@ -334,7 +335,7 @@ export function PlayView({ mode, duration, onFinish }: Props) {
       </div>
 
       <div className="stage">
-        {problem ? (
+        {problem && showProblemText(phase) ? (
           <>
             <div className="source">{problem.source}</div>
             {mode === "long" ? (
@@ -372,7 +373,10 @@ export function PlayView({ mode, duration, onFinish }: Props) {
         ) : null}
       </div>
 
-      <Keyboard lit={lit} next={problem ? expectedChar(problem, engine) : null} />
+      <Keyboard
+        lit={lit}
+        next={problem && showProblemText(phase) ? expectedChar(problem, engine) : null}
+      />
 
       <div className={missing ? "miss show" : "miss"}>
         <CountRing offset={missOffset} count={missCount} />

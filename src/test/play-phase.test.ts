@@ -6,6 +6,7 @@ import {
   createPlaySession,
   handlePlayKey,
   ringCountdown,
+  showProblemText,
   showStartHint,
   tickTimer,
 } from "../lib/play-phase.ts";
@@ -46,6 +47,7 @@ describe("play start phase", () => {
     let session = createPlaySession(180);
     expect(START_HINT).toBe("スペースを押してスタート");
     expect(showStartHint(session.phase)).toBe(true);
+    expect(showProblemText(session.phase)).toBe(false);
     session = tickTimer(session);
     expect(session.remain).toBe(180);
 
@@ -54,11 +56,13 @@ describe("play start phase", () => {
     session = started.session;
     expect(session.phase).toBe("countdown");
     expect(showStartHint(session.phase)).toBe(false);
+    expect(showProblemText(session.phase)).toBe(false);
     session = tickTimer(session);
     expect(session.remain).toBe(180);
 
     session = completeStartCountdown(session);
     expect(session.phase).toBe("playing");
+    expect(showProblemText(session.phase)).toBe(true);
     session = tickTimer(session);
     expect(session.remain).toBe(179);
   });

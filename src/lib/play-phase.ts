@@ -35,6 +35,11 @@ export function showStartHint(phase: PlayPhase): boolean {
   return phase === "armed";
 }
 
+/** 課題文・出典・次キーハイライトはカウント終了後だけ出す */
+export function showProblemText(phase: PlayPhase): boolean {
+  return phase === "playing";
+}
+
 export function applyStartKey(phase: PlayPhase, key: string): PlayPhase {
   if (phase === "armed" && key === " ") return "countdown";
   return phase;

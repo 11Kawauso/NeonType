@@ -455,6 +455,10 @@ body:has(.hud),
   ruby-align: center;
 }
 
+.jp ruby .rb {
+  display: inline;
+}
+
 .jp rt {
   font-size: 0.4em;
   font-weight: 600;
@@ -470,6 +474,7 @@ body:has(.hud),
 
 .jp .ch.cur rt {
   color: var(--cyan);
+  text-shadow: none;
 }
 
 .roma,
@@ -490,10 +495,16 @@ body:has(.hud),
 
 .ch.cur {
   color: var(--cyan);
+}
+
+.roma .ch.cur,
+.code-line .ch.cur,
+.jp > span.ch.cur,
+.jp ruby.ch.cur .rb {
   text-shadow:
     0 0 10px #00f6ff,
     0 0 22px #ff2ec8;
-  border-bottom: 2px solid var(--cyan);
+  box-shadow: inset 0 -2px 0 0 var(--cyan);
   animation: blink 1s steps(1) infinite;
 }
 

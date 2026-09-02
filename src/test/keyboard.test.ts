@@ -31,5 +31,8 @@ describe("Keyboard", () => {
 
     const space = renderToStaticMarkup(createElement(Keyboard, { lit: null, next: " " }));
     expect(space).toContain('class="key space next">SPACE<');
+
+    const hidden = renderToStaticMarkup(createElement(Keyboard, { lit: null, next: null }));
+    expect(hidden).not.toContain("key next");
   });
 });
