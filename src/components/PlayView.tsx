@@ -141,6 +141,7 @@ export function PlayView({ mode, duration, onFinish }: Props) {
   const ids = useMemo(() => problems.map((item) => item.id), [problems]);
 
   function showDelta(n: number) {
+    if (n === 0) return;
     deltaId.current += 1;
     setDelta({ n, id: deltaId.current });
   }

@@ -59,6 +59,25 @@ describe("typing engine", () => {
     expect(result.state.score).toBe(100);
   });
 
+  it("does not award points on a mid-character romaji key", () => {
+    const ka = longProblem("ka", "か。", ["ka", "."]);
+    const afterK = handleKey(createEngineState(), ka, "k");
+    expect(afterK.type).toBe("correct");
+    if (afterK.type !== "correct") return;
+    expect(afterK.delta).toBe(0);
+    expect(afterK.displayAdvanced).toBe(false);
+    expect(afterK.state.score).toBe(0);
+    expect(afterK.state.displayIndex).toBe(0);
+
+    const afterA = handleKey(afterK.state, ka, "a");
+    expect(afterA.type).toBe("correct");
+    if (afterA.type !== "correct") return;
+    expect(afterA.delta).toBe(100);
+    expect(afterA.displayAdvanced).toBe(true);
+    expect(afterA.state.score).toBe(100);
+    expect(afterA.state.displayIndex).toBe(1);
+  });
+
   it("resets progress and combo on miss, and marks Perfect ineligible", () => {
     const afterHit = handleKey(createEngineState(), long, "a");
     expect(afterHit.type).toBe("correct");
